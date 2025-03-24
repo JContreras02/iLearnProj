@@ -1,0 +1,558 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>iLearn - Course Catalog</title>
+    <style>
+      @import url("https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+      }
+
+      body {
+        background: #f8fafc;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 5%;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #0066cc;
+      }
+
+      .logo-img {
+        width: 30px;
+        height: 30px;
+        object-fit: contain;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 2rem;
+      }
+
+      .nav-links a {
+        text-decoration: none;
+        color: #333;
+      }
+
+      .auth-buttons {
+        display: flex;
+        gap: 1rem;
+      }
+
+      .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        text-decoration: none;
+      }
+
+      .btn-login {
+        color: #1a365d;
+        background: transparent;
+        border: 2px solid #1a365d;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+
+      .btn-signup {
+        color: white;
+        background: linear-gradient(45deg, #1a365d, #2563eb);
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+
+      /* Search Section */
+      .search-section {
+        background: linear-gradient(135deg, #0066cc, #4993ee);
+        padding: 2rem 5%;
+      }
+
+      .search-container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      .search-box {
+        display: flex;
+        gap: 1rem;
+        background: white;
+        padding: 0.5rem;
+        border-radius: 50px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .search-input {
+        flex: 1;
+        border: none;
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+        outline: none;
+      }
+
+      .search-btn {
+        background: linear-gradient(45deg, #1a365d, #2563eb);
+        color: white;
+        border: none;
+        padding: 0.5rem 1.5rem;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+
+      .search-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Main Content */
+      .main-content {
+        display: flex;
+        gap: 2rem;
+        padding: 2rem 5%;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      /* Filters Sidebar */
+      .filters {
+        width: 280px;
+        background: white;
+        padding: 1.5rem;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        height: fit-content;
+      }
+
+      .filter-section {
+        margin-bottom: 1.5rem;
+      }
+
+      .filter-title {
+        font-weight: 600;
+        color: #1a365d;
+        margin-bottom: 1rem;
+      }
+
+      .filter-option {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+      }
+
+      .filter-option label {
+        color: #64748b;
+        cursor: pointer;
+      }
+
+      /* Courses Grid */
+      .courses-container {
+        flex: 1;
+      }
+
+      .courses-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+
+      .courses-count {
+        color: #64748b;
+        font-weight: 500;
+      }
+
+      .sort-select {
+        padding: 0.5rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        color: #1a365d;
+        outline: none;
+      }
+
+      .courses-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .course-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .course-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+      }
+
+      .course-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        background: #e2e8f0;
+      }
+
+      .course-info {
+        padding: 1.5rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .course-category {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        background: rgba(73, 147, 238, 0.1);
+        color: #4993ee;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .course-title {
+        color: #1a365d;
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+      }
+
+      .course-description {
+        color: #64748b;
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+        line-height: 1.5;
+        flex-grow: 1;
+      }
+
+      .course-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 1rem;
+        border-top: 1px solid #e2e8f0;
+      }
+
+      .course-rating {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        color: #4993ee;
+        font-weight: 500;
+      }
+
+      .course-price {
+        font-weight: 600;
+        color: #1a365d;
+      }
+
+      /* Enroll Button */
+      .enroll-btn {
+        width: 100%;
+        padding: 0.75rem;
+        background: linear-gradient(45deg, #1a365d, #2563eb);
+        color: white;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .enroll-btn:hover {
+        background: linear-gradient(45deg, #2563eb, #1a365d);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .main-content {
+          flex-direction: column;
+        }
+
+        .filters {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <a href="index.html" style="text-decoration: none">
+        <div class="logo">
+          <img
+            src="../assets/logo-icon.png"
+            alt="iLearn Logo"
+            class="logo-img"
+          />
+          iLearn
+        </div>
+      </a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="courses.html">Courses</a>
+        <a href="about.html">About</a>
+      </div>
+      <div class="auth-buttons">
+        <a href="signin.html" class="btn btn-login">Login</a>
+        <a href="signup.html" class="btn btn-signup">Signup</a>
+      </div>
+    </nav>
+
+    <section class="search-section">
+      <div class="search-container">
+        <div class="search-box">
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search for courses..."
+          />
+          <button class="search-btn">Search</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="main-content">
+      <aside class="filters">
+        <div class="filter-section">
+          <h3 class="filter-title">Categories</h3>
+          <div class="filter-option">
+            <input type="checkbox" id="web-dev" />
+            <label for="web-dev">Web Development</label>
+          </div>
+          <div class="filter-option">
+            <input type="checkbox" id="data-science" />
+            <label for="data-science">Data Science</label>
+          </div>
+          <div class="filter-option">
+            <input type="checkbox" id="design" />
+            <label for="design">Design</label>
+          </div>
+          <div class="filter-option">
+            <input type="checkbox" id="business" />
+            <label for="business">Business</label>
+          </div>
+        </div>
+
+        <div class="filter-section">
+          <h3 class="filter-title">Level</h3>
+          <div class="filter-option">
+            <input type="checkbox" id="beginner" />
+            <label for="beginner">Beginner</label>
+          </div>
+          <div class="filter-option">
+            <input type="checkbox" id="intermediate" />
+            <label for="intermediate">Intermediate</label>
+          </div>
+          <div class="filter-option">
+            <input type="checkbox" id="advanced" />
+            <label for="advanced">Advanced</label>
+          </div>
+        </div>
+
+        <div class="filter-section">
+          <h3 class="filter-title">Price</h3>
+          <div class="filter-option">
+            <input type="checkbox" id="free" />
+            <label for="free">Free</label>
+          </div>
+          <div class="filter-option">
+            <input type="checkbox" id="paid" />
+            <label for="paid">Paid</label>
+          </div>
+        </div>
+      </aside>
+
+      <main class="courses-container">
+        <div class="courses-header">
+          <div class="courses-count">Showing 12 courses</div>
+          <select class="sort-select">
+            <option value="popular">Most Popular</option>
+            <option value="newest">Newest</option>
+            <option value="price-low">Price: Low to High</option>
+            <option value="price-high">Price: High to Low</option>
+          </select>
+        </div>
+
+        <div class="courses-grid">
+          <!-- Course Card 1 -->
+          <div class="course-card">
+            <img
+              src="/api/placeholder/400/200"
+              alt="Course"
+              class="course-image"
+            />
+            <div class="course-info">
+              <span class="course-category">Web Development</span>
+              <h3 class="course-title">Complete Web Development Bootcamp</h3>
+              <p class="course-description">
+                Learn web development from scratch with HTML, CSS, JavaScript,
+                React, and Node.js.
+              </p>
+              <div class="course-meta">
+                <div class="course-rating">★ 4.8 (2.1k reviews)</div>
+                <div class="course-price">$89.99</div>
+              </div>
+            </div>
+            <button
+              class="enroll-btn"
+              onclick="enrollCourse('Complete Web Development Bootcamp')"
+            >
+              Enroll Now
+            </button>
+          </div>
+
+          <!-- Course Card 2 -->
+          <div class="course-card">
+            <img
+              src="/api/placeholder/400/200"
+              alt="Course"
+              class="course-image"
+            />
+            <div class="course-info">
+              <span class="course-category">Data Science</span>
+              <h3 class="course-title">Python for Data Analysis</h3>
+              <p class="course-description">
+                Master data analysis with Python, Pandas, NumPy, and Matplotlib.
+              </p>
+              <div class="course-meta">
+                <div class="course-rating">★ 4.9 (1.8k reviews)</div>
+                <div class="course-price">$79.99</div>
+              </div>
+            </div>
+            <button
+              class="enroll-btn"
+              onclick="enrollCourse('Python for Data Analysis')"
+            >
+              Enroll Now
+            </button>
+          </div>
+
+          <!-- Course Card 3 -->
+          <div class="course-card">
+            <img
+              src="/api/placeholder/400/200"
+              alt="Course"
+              class="course-image"
+            />
+            <div class="course-info">
+              <span class="course-category">Design</span>
+              <h3 class="course-title">UI/UX Design Fundamentals</h3>
+              <p class="course-description">
+                Learn the principles of user interface and user experience
+                design.
+              </p>
+              <div class="course-meta">
+                <div class="course-rating">★ 4.7 (1.5k reviews)</div>
+                <div class="course-price">$69.99</div>
+              </div>
+            </div>
+            <button
+              class="enroll-btn"
+              onclick="enrollCourse('UI/UX Design Fundamentals')"
+            >
+              Enroll Now
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      function enrollCourse(courseName) {
+        // Check if user is logged in (in a real app, this would be a backend check)
+        const isLoggedIn = checkUserLogin();
+
+        if (!isLoggedIn) {
+          alert("Please log in to enroll in courses");
+          window.location.href = "signin.html";
+          return;
+        }
+
+        // Simulate adding course to student portal
+        try {
+          let enrolledCourses =
+            JSON.parse(localStorage.getItem("enrolledCourses")) || [];
+
+          // Check if course is already enrolled
+          if (enrolledCourses.includes(courseName)) {
+            alert("You are already enrolled in this course");
+            return;
+          }
+
+          // Add course to enrolled courses
+          enrolledCourses.push(courseName);
+          localStorage.setItem(
+            "enrolledCourses",
+            JSON.stringify(enrolledCourses)
+          );
+
+          // Show success message
+          alert(`Successfully enrolled in: ${courseName}`);
+
+          // Redirect to student portal (in a real app, this would be a server-side operation)
+          window.location.href = "student.html";
+        } catch (error) {
+          console.error("Enrollment error:", error);
+          alert("Unable to enroll. Please try again.");
+        }
+      }
+
+      function checkUserLogin() {
+        // In a real application, this would be a secure backend authentication check
+        // For this example, we'll use a simple localStorage flag
+        return localStorage.getItem("isLoggedIn") === "true";
+      }
+
+      // Optional: Add an event listener to handle login state
+      document.addEventListener("DOMContentLoaded", () => {
+        const loginStatus = checkUserLogin();
+        const authButtons = document.querySelector(".auth-buttons");
+
+        if (loginStatus) {
+          // Replace login/signup buttons with logout and profile
+          authButtons.innerHTML = `
+            <a href="student-portal.html" class="btn btn-login">My Courses</a>
+            <a href="#" class="btn btn-signup" onclick="logout()">Logout</a>
+          `;
+        }
+      });
+
+      function logout() {
+        localStorage.removeItem("isLoggedIn");
+        window.location.href = "index.html";
+      }
+    </script>
+  </body>
+</html>
