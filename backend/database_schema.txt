@@ -1,0 +1,469 @@
+-- -----------------------------------------------------
+-- Table `users`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(100) NOT NULL,
+  `email` VARCHAR(100) NOT NULL,
+  `password` VARCHAR(255) NOT NULL,
+  `role` ENUM('student', 'instructor', 'admin') NOT NULL,
+  `phone` VARCHAR(20) NULL,
+  `bio` TEXT NULL,
+  `avatar` VARCHAR(255) NULL,
+  `language` VARCHAR(30) DEFAULT 'English',
+  `timezone` VARCHAR(50) DEFAULT 'UTC',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `email_UNIQUE` (`email` ASC)
+);
+
+-- -----------------------------------------------------
+-- Table `courses`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `courses` (
+  `course_id` INT NOT NULL AUTO_INCREMENT,
+  `user_id` INT NOT NULL,  -- Instructor who created the course
+  `title` VARCHAR(150) NOT NULL,
+  `description` TEXT NOT NULL,
+  `thumbnail` VARCHAR(255) NULL,
+  `category` VARCHAR(50) NOT NULL,
+  `price` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  `status` ENUM('draft', 'published', 'archived') NOT NULL DEFAULT 'draft',
+  `duration` INT NULL COMMENT 'Duration in hours',
+  `level` ENUM('beginner', 'intermediate', 'advanced') NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`course_id`),
+  INDEX `fk_courses_users_idx` (`user_id` ASC),
+  CONSTRAINT `fk_courses_users`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION
+);
+
+-- -----------------------------------------------------
+-- Table `lessons`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `lessons` (
+  `lesson_id` INT NOT NULL AUTO_INCREMENT,
+  `course_id` INT NOT NULL,
+  `title` VARCHAR(150) NOT NULL,
+  `content` TEXT NULL,
+  `video_url` VARCHAR(255) NULL,
+  `duration` INT NULL COMMENT 'Duration in minutes',
+  `sort_order` INT NOT NULL DEFAULT 0,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`lesson_id`),
+  INDEX `fk_lessons_courses_idx` (`course_id` ASC),
+  CONSTRAINT `fk_lessons_courses`
+    FOREIGN KEY (`course_id`)
+    REFERENCES `courses` (`course_id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION
+);
+
+-- -----------------------------------------------------
+-- Table `enrollments`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `enrollments` (
+  `enrollment_id` INT NOT NULL AUTO_INCREMENT,
+  `user_id` INT NOT NULL,  -- Student who enrolled
+  `course_id` INT NOT NULL,
+  `status` ENUM('active', 'completed', 'withdrawn') NOT NULL DEFAULT 'active',
+  `progress` INT NOT NULL DEFAULT 0 COMMENT 'Progress percentage',
+  `start_date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `completion_date` TIMESTAMP NULL,
+  `last_accessed` TIMESTAMP NULL,
+  PRIMARY KEY (`enrollment_id`),
+  UNIQUE INDEX `unique_enrollment` (`user_id` ASC, `course_id` ASC),
+  INDEX `fk_enrollments_users_idx` (`user_id` ASC),
+  INDEX `fk_enrollments_courses_idx` (`course_id` ASC),
+  CONSTRAINT `fk_enrollments_users`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_enrollments_courses`
+    FOREIGN KEY (`course_id`)
+    REFERENCES `courses` (`course_id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION
+);
+
+-- -----------------------------------------------------
+-- Table `assignments`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `assignments` (
+  `assignment_id` INT NOT NULL AUTO_INCREMENT,
+  `course_id` INT NOT NULL,
+  `title` VARCHAR(150) NOT NULL,
+  `description` TEXT NOT NULL,
+  `type` ENUM('quiz', 'homework', 'project', 'exam') NOT NULL,
+  `points` INT NOT NULL DEFAULT 0,
+  `due_date` TIMESTAMP NULL,
+  `publish_date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`assignment_id`),
+  INDEX `fk_assignments_courses_idx` (`course_id` ASC),
+  CONSTRAINT `fk_assignments_courses`
+    FOREIGN KEY (`course_id`)
+    REFERENCES `courses` (`course_id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION
+);
+
+-- -----------------------------------------------------
+-- Table `submissions`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `submissions` (
+  `submission_id` INT NOT NULL AUTO_INCREMENT,
+  `assignment_id` INT NOT NULL,
+  `user_id` INT NOT NULL,  -- Student who submitted
+  `content` TEXT NULL,
+  `file_url` VARCHAR(255) NULL,
+  `status` ENUM('submitted', 'graded', 'late', 'resubmitted') NOT NULL DEFAULT 'submitted',
+  `score` INT NULL,
+  `feedback` TEXT NULL,
+  `submitted_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `graded_at` TIMESTAMP NULL,
+  PRIMARY KEY (`submission_id`),
+  UNIQUE INDEX `unique_submission` (`assignment_id` ASC, `user_id` ASC),
+  INDEX `fk_submissions_assignments_idx` (`assignment_id` ASC),
+  INDEX `fk_submissions_users_idx` (`user_id` ASC),
+  CONSTRAINT `fk_submissions_assignments`
+    FOREIGN KEY (`assignment_id`)
+    REFERENCES `assignments` (`assignment_id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_submissions_users`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION
+);
+
+-- -----------------------------------------------------
+-- Table `grades`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `grades` (
+  `grade_id` INT NOT NULL AUTO_INCREMENT,
+  `user_id` INT NOT NULL,  -- Student receiving the grade
+  `course_id` INT NOT NULL,
+  `final_grade` DECIMAL(5,2) NULL,
+  `letter_grade` VARCHAR(5) NULL,
+  `breakdown` JSON NULL COMMENT 'JSON with grade categories and percentages',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`grade_id`),
+  UNIQUE INDEX `unique_grade` (`user_id` ASC, `course_id` ASC),
+  INDEX `fk_grades_users_idx` (`user_id` ASC),
+  INDEX `fk_grades_courses_idx` (`course_id` ASC),
+  CONSTRAINT `fk_grades_users`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_grades_courses`
+    FOREIGN KEY (`course_id`)
+    REFERENCES `courses` (`course_id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION
+);
+
+-- -----------------------------------------------------
+-- Table `reviews`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `reviews` (
+  `review_id` INT NOT NULL AUTO_INCREMENT,
+  `user_id` INT NOT NULL,  -- Student who wrote the review
+  `course_id` INT NOT NULL,
+  `rating` INT NOT NULL,
+  `comment` TEXT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`review_id`),
+  UNIQUE INDEX `unique_review` (`user_id` ASC, `course_id` ASC),
+  INDEX `fk_reviews_users_idx` (`user_id` ASC),
+  INDEX `fk_reviews_courses_idx` (`course_id` ASC),
+  CONSTRAINT `fk_reviews_users`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_reviews_courses`
+    FOREIGN KEY (`course_id`)
+    REFERENCES `courses` (`course_id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION
+);
+
+-- -----------------------------------------------------
+-- Table `discussions`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `discussions` (
+  `discussion_id` INT NOT NULL AUTO_INCREMENT,
+  `course_id` INT NOT NULL,
+  `user_id` INT NOT NULL,  -- Who created the discussion
+  `title` VARCHAR(150) NOT NULL,
+  `content` TEXT NOT NULL,
+  `type` ENUM('discussion', 'question', 'announcement') NOT NULL,
+  `pinned` BOOLEAN NOT NULL DEFAULT 0,
+  `views` INT NOT NULL DEFAULT 0,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`discussion_id`),
+  INDEX `fk_discussions_courses_idx` (`course_id` ASC),
+  INDEX `fk_discussions_users_idx` (`user_id` ASC),
+  CONSTRAINT `fk_discussions_courses`
+    FOREIGN KEY (`course_id`)
+    REFERENCES `courses` (`course_id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_discussions_users`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION
+);
+
+-- -----------------------------------------------------
+-- Table `discussion_replies`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `discussion_replies` (
+  `reply_id` INT NOT NULL AUTO_INCREMENT,
+  `discussion_id` INT NOT NULL,
+  `user_id` INT NOT NULL,  -- Who wrote the reply
+  `content` TEXT NOT NULL,
+  `is_solution` BOOLEAN NOT NULL DEFAULT 0,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`reply_id`),
+  INDEX `fk_replies_discussions_idx` (`discussion_id` ASC),
+  INDEX `fk_replies_users_idx` (`user_id` ASC),
+  CONSTRAINT `fk_replies_discussions`
+    FOREIGN KEY (`discussion_id`)
+    REFERENCES `discussions` (`discussion_id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_replies_users`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION
+);
+
+-- -----------------------------------------------------
+-- Table `messages`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `messages` (
+  `message_id` INT NOT NULL AUTO_INCREMENT,
+  `sender_id` INT NOT NULL,
+  `receiver_id` INT NOT NULL,
+  `thread_id` VARCHAR(100) NOT NULL,
+  `content` TEXT NOT NULL,
+  `read` BOOLEAN NOT NULL DEFAULT 0,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`message_id`),
+  INDEX `fk_messages_sender_idx` (`sender_id` ASC),
+  INDEX `fk_messages_receiver_idx` (`receiver_id` ASC),
+  INDEX `thread_id_idx` (`thread_id` ASC),
+  CONSTRAINT `fk_messages_sender`
+    FOREIGN KEY (`sender_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_messages_receiver`
+    FOREIGN KEY (`receiver_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION
+);
+
+-- -----------------------------------------------------
+-- Table `events`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `events` (
+  `event_id` INT NOT NULL AUTO_INCREMENT,
+  `user_id` INT NOT NULL,  -- User associated with the event
+  `course_id` INT NULL,    -- Optional course association
+  `title` VARCHAR(150) NOT NULL,
+  `description` TEXT NULL,
+  `type` ENUM('assignment', 'lecture', 'quiz', 'personal') NOT NULL,
+  `date` TIMESTAMP NOT NULL,
+  `duration` INT NULL COMMENT 'Duration in minutes',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`event_id`),
+  INDEX `fk_events_users_idx` (`user_id` ASC),
+  INDEX `fk_events_courses_idx` (`course_id` ASC),
+  CONSTRAINT `fk_events_users`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_events_courses`
+    FOREIGN KEY (`course_id`)
+    REFERENCES `courses` (`course_id`)
+    ON DELETE SET NULL
+    ON UPDATE NO ACTION
+);
+
+-- -----------------------------------------------------
+-- Table `notifications`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `notifications` (
+  `notification_id` INT NOT NULL AUTO_INCREMENT,
+  `user_id` INT NOT NULL,  -- User receiving the notification
+  `title` VARCHAR(150) NOT NULL,
+  `content` TEXT NULL,
+  `type` ENUM('assignment', 'grade', 'message', 'announcement', 'system') NOT NULL,
+  `reference_id` INT NULL COMMENT 'ID referencing the related item (assignment, course, etc.)',
+  `read` BOOLEAN NOT NULL DEFAULT 0,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`notification_id`),
+  INDEX `fk_notifications_users_idx` (`user_id` ASC),
+  CONSTRAINT `fk_notifications_users`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION
+);
+
+-- -----------------------------------------------------
+-- Table `earnings`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `earnings` (
+  `earning_id` INT NOT NULL AUTO_INCREMENT,
+  `user_id` INT NOT NULL,  -- Instructor earning the revenue
+  `course_id` INT NOT NULL,
+  `amount` DECIMAL(10,2) NOT NULL,
+  `transaction_type` ENUM('sale', 'refund', 'withdrawal', 'adjustment') NOT NULL,
+  `status` ENUM('pending', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
+  `description` VARCHAR(255) NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`earning_id`),
+  INDEX `fk_earnings_users_idx` (`user_id` ASC),
+  INDEX `fk_earnings_courses_idx` (`course_id` ASC),
+  CONSTRAINT `fk_earnings_users`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_earnings_courses`
+    FOREIGN KEY (`course_id`)
+    REFERENCES `courses` (`course_id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION
+);
+
+-- -----------------------------------------------------
+-- Table `user_progress`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `user_progress` (
+  `progress_id` INT NOT NULL AUTO_INCREMENT,
+  `user_id` INT NOT NULL,
+  `lesson_id` INT NOT NULL,
+  `completed` BOOLEAN NOT NULL DEFAULT 0,
+  `last_position` INT NULL COMMENT 'Last position in video (seconds)',
+  `last_accessed` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`progress_id`),
+  UNIQUE INDEX `unique_progress` (`user_id` ASC, `lesson_id` ASC),
+  INDEX `fk_progress_users_idx` (`user_id` ASC),
+  INDEX `fk_progress_lessons_idx` (`lesson_id` ASC),
+  CONSTRAINT `fk_progress_users`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_progress_lessons`
+    FOREIGN KEY (`lesson_id`)
+    REFERENCES `lessons` (`lesson_id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION
+);
+
+-- -----------------------------------------------------
+-- Table `certificates`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `certificates` (
+  `certificate_id` INT NOT NULL AUTO_INCREMENT,
+  `user_id` INT NOT NULL,
+  `course_id` INT NOT NULL,
+  `certificate_url` VARCHAR(255) NOT NULL,
+  `issue_date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`certificate_id`),
+  UNIQUE INDEX `unique_certificate` (`user_id` ASC, `course_id` ASC),
+  INDEX `fk_certificates_users_idx` (`user_id` ASC),
+  INDEX `fk_certificates_courses_idx` (`course_id` ASC),
+  CONSTRAINT `fk_certificates_users`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_certificates_courses`
+    FOREIGN KEY (`course_id`)
+    REFERENCES `courses` (`course_id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION
+);
+
+-- -----------------------------------------------------
+-- Table `user_learning_streaks`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `user_learning_streaks` (
+  `streak_id` INT NOT NULL AUTO_INCREMENT,
+  `user_id` INT NOT NULL,
+  `current_streak` INT NOT NULL DEFAULT 0,
+  `longest_streak` INT NOT NULL DEFAULT 0,
+  `last_activity_date` DATE NULL,
+  `streak_data` JSON NULL COMMENT 'JSON with dates of activity',
+  PRIMARY KEY (`streak_id`),
+  UNIQUE INDEX `user_id_UNIQUE` (`user_id` ASC),
+  CONSTRAINT `fk_streaks_users`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION
+);
+
+-- -----------------------------------------------------
+-- Table `withdrawals`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `withdrawals` (
+  `withdrawal_id` INT NOT NULL AUTO_INCREMENT,
+  `user_id` INT NOT NULL,
+  `amount` DECIMAL(10,2) NOT NULL,
+  `method` ENUM('bank', 'paypal', 'other') NOT NULL,
+  `status` ENUM('pending', 'processing', 'completed', 'rejected') NOT NULL DEFAULT 'pending',
+  `reference_number` VARCHAR(100) NULL,
+  `notes` TEXT NULL,
+  `requested_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `processed_at` TIMESTAMP NULL,
+  PRIMARY KEY (`withdrawal_id`),
+  INDEX `fk_withdrawals_users_idx` (`user_id` ASC),
+  CONSTRAINT `fk_withdrawals_users`
+    FOREIGN KEY (`user_id`)
+    REFERENCES `users` (`id`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION
+);
+
+-- -----------------------------------------------------
+-- Adding Sample Data (Optional)
+-- -----------------------------------------------------
+
+-- Add sample users (password is "password123" hashed with bcrypt)
+INSERT INTO `users` (`name`, `email`, `password`, `role`, `phone`, `bio`)
+VALUES 
+('John Instructor', 'instructor@example.com', '$2b$10$NSmSTy9pYnO0N99QFxAjH.RwbDcE4h2mbLg7hCOMZ6H6YCzLOl0Oy', 'instructor', '123-456-7890', 'Experienced web development instructor with 10+ years in the industry.'),
+('Jane Student', 'student@example.com', '$2b$10$NSmSTy9pYnO0N99QFxAjH.RwbDcE4h2mbLg7hCOMZ6H6YCzLOl0Oy', 'student', '098-765-4321', 'Aspiring web developer looking to expand my skills.');
+
+-- Add sample courses
+INSERT INTO `courses` (`user_id`, `title`, `description`, `category`, `price`, `status`, `duration`, `level`)
+VALUES 
+(1, 'Introduction to JavaScript', 'Learn the fundamentals of JavaScript programming including variables, functions, objects, and DOM manipulation.', 'web-development', 39.99, 'published', 8, 'beginner'),
+(1, 'Web Development Fundamentals', 'Master HTML, CSS, and responsive design principles to build modern websites.', 'web-development', 49.99, 'published', 10, 'beginner'),
+(1, 'Database Design', 'Learn to design efficient database structures for web applications.', 'databases', 59.99, 'draft', 6, 'intermediate');
