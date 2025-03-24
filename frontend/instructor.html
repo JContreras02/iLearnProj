@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>iLearn - Instructor Portal</title>
+    <head>
+      <!-- Add these CSS files -->
+      <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css"
+      />
+      <link rel="stylesheet" href="assets/instructor.css" />
+    </head>
+  </head>
+  <body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+      <div class="loading-spinner"></div>
+    </div>
+
+    <aside class="sidebar">
+      <a href="#" class="logo">
+        <img src="assets/logo-icon.png" alt="iLearn Logo" class="logo-img" />
+        iLearn
+      </a>
+      <ul class="nav-menu">
+        <li class="nav-item">
+          <a href="#dashboard" class="nav-link active">
+            <span class="nav-icon">📊</span>
+            Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#courses" class="nav-link">
+            <span class="nav-icon">📚</span>
+            My Courses
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#students" class="nav-link">
+            <span class="nav-icon">👥</span>
+            Students
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#assignments" class="nav-link">
+            <span class="nav-icon">📝</span>
+            Assignments
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#analytics" class="nav-link">
+            <span class="nav-icon">📈</span>
+            Analytics
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#discussions" class="nav-link">
+            <span class="nav-icon">💬</span>
+            Discussions
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#earnings" class="nav-link">
+            <span class="nav-icon">💰</span>
+            Earnings
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#settings" class="nav-link">
+            <span class="nav-icon">⚙️</span>
+            Settings
+          </a>
+        </li>
+      </ul>
+      <div class="user-profile">
+        <img
+          src="/api/placeholder/100/100"
+          alt="Profile"
+          class="profile-img"
+          id="userProfileImage"
+        />
+        <div class="profile-info">
+          <div class="profile-name" id="userName"></div>
+          <div class="profile-email" id="userEmail"></div>
+          <button class="signout-btn" onclick="handleSignOut()">
+            <span class="signout-icon">🚪</span>
+            Sign Out
+          </button>
+        </div>
+      </div>
+
+      <div
+        class="profile-picture-upload"
+        id="profilePictureModal"
+        style="display: none"
+      >
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Update Profile Picture</h3>
+            <button class="close-modal" id="closeProfileModal">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="upload-preview">
+              <img
+                src="/api/placeholder/200/200"
+                alt="Preview"
+                id="uploadPreview"
+              />
+            </div>
+            <div class="upload-controls">
+              <input
+                type="file"
+                id="profileImageInput"
+                accept="image/*"
+                style="display: none"
+              />
+              <button class="upload-btn" id="chooseFileBtn">Choose File</button>
+              <p class="upload-note">JPG, PNG or GIF. Maximum size 2MB.</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary" id="cancelUpload">Cancel</button>
+            <button class="btn-primary" id="saveProfilePicture" disabled>
+              Save Picture
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <!-- Dashboard Section -->
+      <section id="dashboard-section" class="content-section active">
+        <div class="dashboard-header">
+          <h1 class="page-title" id="welcomeMessage"></h1>
+          <div class="notification-wrapper">
+            <div class="notification-wrapper">
+              <button class="notification-bell" onclick="toggleNotifications()">
+                🔔
+                <span class="notification-badge" id="notificationCount">3</span>
+              </button>
+              <div class="notification-dropdown" id="notificationDropdown">
+                <div class="notification-header">
+                  <h3>Notifications</h3>
+                  <div class="notification-actions">
+                    <button class="mark-all-read" onclick="markAllAsRead()">
+                      Mark all as read
+                    </button>
+                  </div>
+                </div>
+                <div class="notification-list" id="notificationList">
+                  <!-- Sample notification items for demonstration -->
+                  <div class="notification-item unread">
+                    <div class="notification-icon enrollment">👥</div>
+                    <div class="notification-content">
+                      <div class="notification-text">
+                        <strong>New Enrollment</strong>
+                        <p>
+                          Sarah Johnson enrolled in "Web Development
+                          Fundamentals"
+                        </p>
+                      </div>
+                      <span class="notification-time">2 hours ago</span>
+                    </div>
+                    <button class="mark-read" onclick="markAsRead(this)">
+                      ✓
+                    </button>
+                  </div>
+
+                  <div class="notification-item unread">
+                    <div class="notification-icon submission">📝</div>
+                    <div class="notification-content">
+                      <div class="notification-text">
+                        <strong>Assignment Submitted</strong>
+                        <p>John Smith submitted "Final Project" for grading</p>
+                      </div>
+                      <span class="notification-time">3 hours ago</span>
+                    </div>
+                    <button class="mark-read" onclick="markAsRead(this)">
+                      ✓
+                    </button>
+                  </div>
+
+                  <div class="notification-item unread">
+                    <div class="notification-icon review">⭐</div>
+                    <div class="notification-content">
+                      <div class="notification-text">
+                        <strong>New Review</strong>
+                        <p>
+                          Your course "Introduction to JavaScript" received a
+                          5-star review
+                        </p>
+                      </div>
+                      <span class="notification-time">Yesterday</span>
+                    </div>
+                    <button class="mark-read" onclick="markAsRead(this)">
+                      ✓
+                    </button>
+                  </div>
+
+                  <div class="notification-item">
+                    <div class="notification-icon earnings">💰</div>
+                    <div class="notification-content">
+                      <div class="notification-text">
+                        <strong>Earnings Update</strong>
+                        <p>You earned $120 this week from course sales</p>
+                      </div>
+                      <span class="notification-time">2 days ago</span>
+                    </div>
+                    <button class="mark-read" onclick="markAsRead(this)">
+                      ✓
+                    </button>
+                  </div>
+                </div>
+                <div class="notification-footer">
+                  <a href="#" onclick="viewAllNotifications()"
+                    >View all notifications</a
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="notification-dropdown">
+              <div class="notification-header">
+                <h3>Notifications</h3>
+                <div class="notification-actions">
+                  <button class="mark-all-read" onclick="markAllAsRead()">
+                    Mark all as read
+                  </button>
+                </div>
+              </div>
+              <div class="notification-list" id="notificationList">
+                <!-- Notifications will be dynamically inserted here -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-info">
+              <span class="stat-value" id="totalStudents">0</span>
+              <span class="stat-label">Total Students</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">📚</div>
+            <div class="stat-info">
+              <span class="stat-value" id="activeCourses">0</span>
+              <span class="stat-label">Active Courses</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <div class="stat-info">
+              <span class="stat-value" id="monthlyEarnings">$0</span>
+              <span class="stat-label">Monthly Earnings</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-info">
+              <span class="stat-value" id="averageRating">0.0</span>
+              <span class="stat-label">Average Rating</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+          <!-- Course Activity -->
+          <div class="dashboard-card">
+            <div class="card-header">
+              <h2>Recent Course Activity</h2>
+              <button class="btn-primary" onclick="handleCreateCourse()">
+                Create Course
+              </button>
+            </div>
+            <div class="course-activity-list" id="courseActivityList">
+              <!-- Course activity will be dynamically inserted here -->
+            </div>
+          </div>
+
+          <!-- Student Engagement -->
+          <div class="dashboard-card">
+            <div class="card-header">
+              <h2>Student Engagement</h2>
+              <button class="btn-primary" onclick="viewEngagementDetails()">
+                View Details
+              </button>
+            </div>
+            <div class="engagement-stats" id="engagementStats">
+              <div class="stat-item">
+                <span class="stat-percentage" id="completionRate">0%</span>
+                <span class="stat-description">Course Completion Rate</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-percentage" id="submissionRate">0%</span>
+                <span class="stat-description">Assignment Submission Rate</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Reviews -->
+          <div class="dashboard-card">
+            <div class="card-header">
+              <h2>Recent Reviews</h2>
+              <button class="btn-primary" onclick="viewAllReviews()">
+                View All
+              </button>
+            </div>
+            <div class="reviews-list" id="reviewsList">
+              <!-- Reviews will be dynamically inserted here -->
+            </div>
+          </div>
+
+          <!-- Upcoming Schedule -->
+          <div class="dashboard-card">
+            <div class="card-header">
+              <h2>Upcoming Schedule</h2>
+              <button class="btn-primary" onclick="addNewEvent()">
+                Add Event
+              </button>
+            </div>
+            <div class="schedule-list" id="scheduleList">
+              <!-- Schedule items will be dynamically inserted here -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Courses Section -->
+      <section id="courses-section" class="content-section">
+        <div class="dashboard-header">
+          <h1 class="page-title">My Courses</h1>
+          <button class="create-course-btn" onclick="handleCreateCourse()">
+            <span>+</span> Create Course
+          </button>
+        </div>
+
+        <!-- Course Controls -->
+        <div class="course-controls">
+          <div class="filter-group">
+            <button class="filter-btn active" onclick="filterCourses('all')">
+              All Courses
+            </button>
+            <button class="filter-btn" onclick="filterCourses('published')">
+              Published
+            </button>
+            <button class="filter-btn" onclick="filterCourses('draft')">
+              Draft
+            </button>
+            <button class="filter-btn" onclick="filterCourses('archived')">
+              Archived
+            </button>
+          </div>
+
+          <div class="search-box">
+            <input
+              type="text"
+              placeholder="Search courses..."
+              oninput="searchCourses(this.value)"
+              id="courseSearch"
+            />
+            <button class="search-btn">🔍</button>
+          </div>
+        </div>
+
+        <!-- Course List -->
+        <div class="course-list" id="courseList">
+          <!-- Courses will be dynamically inserted here -->
+        </div>
+      </section>
+
+      <!-- Students Section -->
+      <section id="students-section" class="content-section">
+        <div class="dashboard-header">
+          <h1 class="page-title">Students</h1>
+          <div class="header-actions">
+            <button class="export-btn" onclick="exportStudentData()">
+              <span>📥</span> Export Data
+            </button>
+          </div>
+        </div>
+
+        <!-- Student Controls -->
+        <div class="student-controls">
+          <div class="filter-group">
+            <select
+              class="filter-select"
+              id="courseFilter"
+              onchange="filterStudentsByCourse(this.value)"
+            >
+              <option value="all">All Courses</option>
+              <!-- Course options will be dynamically added -->
+            </select>
+            <select
+              class="filter-select"
+              onchange="filterStudentsByStatus(this.value)"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+          <div class="search-box">
+            <input
+              type="text"
+              placeholder="Search students..."
+              oninput="searchStudents(this.value)"
+              id="studentSearch"
+            />
+            <button class="search-btn">🔍</button>
+          </div>
+        </div>
+
+        <!-- Students Table -->
+        <div class="table-container">
+          <table class="students-table">
+            <thead>
+              <tr>
+                <th>
+                  <input
+                    type="checkbox"
+                    class="select-all"
+                    onclick="toggleSelectAll(this)"
+                  />
+                </th>
+                <th>Student</th>
+                <th>Course</th>
+                <th>Progress</th>
+                <th>Last Active</th>
+                <th>Performance</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="studentsTableBody">
+              <!-- Student rows will be dynamically inserted here -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="studentsPagination">
+          <!-- Pagination will be dynamically generated -->
+        </div>
+      </section>
+      <!-- Assignments Section -->
+      <section id="assignments-section" class="content-section">
+        <div class="dashboard-header">
+          <h1 class="page-title">Assignments</h1>
+          <button
+            class="create-btn"
+            onclick="openModal('createAssignmentModal')"
+          >
+            <span>+</span> Create Assignment
+          </button>
+        </div>
+
+        <!-- Assignment Controls -->
+        <div class="assignment-controls">
+          <div class="filter-group">
+            <select
+              class="filter-select"
+              id="assignmentCourseFilter"
+              onchange="filterAssignmentsByCourse(this.value)"
+            >
+              <option value="all">All Courses</option>
+              <!-- Course options will be dynamically added -->
+            </select>
+            <select
+              class="filter-select"
+              onchange="filterAssignmentsByStatus(this.value)"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="upcoming">Upcoming</option>
+              <option value="past">Past</option>
+            </select>
+            <select
+              class="filter-select"
+              onchange="filterAssignmentsByType(this.value)"
+            >
+              <option value="all">All Types</option>
+              <option value="project">Project</option>
+              <option value="quiz">Quiz</option>
+              <option value="homework">Homework</option>
+            </select>
+          </div>
+          <div class="search-box">
+            <input
+              type="text"
+              placeholder="Search assignments..."
+              oninput="searchAssignments(this.value)"
+              id="assignmentSearch"
+            />
+            <button class="search-btn">🔍</button>
+          </div>
+        </div>
+
+        <!-- Assignments Grid -->
+        <div class="assignments-grid" id="assignmentsGrid">
+          <!-- Assignment cards will be dynamically inserted here -->
+        </div>
+      </section>
+
+      <!-- Analytics Section -->
+      <section id="analytics-section" class="content-section">
+        <div class="dashboard-header">
+          <h1 class="page-title">Analytics</h1>
+          <div class="header-actions">
+            <select
+              class="time-range-select"
+              onchange="updateTimeRange(this.value)"
+              id="timeRangeSelect"
+            >
+              <option value="7">Last 7 days</option>
+              <option value="30" selected>Last 30 days</option>
+              <option value="90">Last 90 days</option>
+              <option value="365">Last year</option>
+            </select>
+            <button class="export-btn" onclick="exportAnalytics()">
+              <span>📥</span> Export Report
+            </button>
+          </div>
+        </div>
+
+        <!-- Analytics Overview -->
+        <div class="analytics-overview" id="analyticsOverview">
+          <!-- Analytics cards will be dynamically inserted here -->
+        </div>
+
+        <!-- Detailed Analytics -->
+        <div class="analytics-grid">
+          <!-- Revenue Chart -->
+          <div class="analytics-card large">
+            <div class="card-header">
+              <h2>Revenue Analysis</h2>
+              <div class="chart-controls">
+                <button
+                  class="chart-btn active"
+                  onclick="updateChartView('revenue')"
+                >
+                  Revenue
+                </button>
+                <button
+                  class="chart-btn"
+                  onclick="updateChartView('enrollments')"
+                >
+                  Enrollments
+                </button>
+                <button class="chart-btn" onclick="updateChartView('growth')">
+                  Growth
+                </button>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="revenueChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Course Performance -->
+          <div class="analytics-card">
+            <div class="card-header">
+              <h2>Course Performance</h2>
+            </div>
+            <div class="performance-list" id="coursePerformanceList">
+              <!-- Performance items will be dynamically added -->
+            </div>
+          </div>
+
+          <!-- Student Engagement -->
+          <div class="analytics-card">
+            <div class="card-header">
+              <h2>Student Engagement</h2>
+              <select
+                class="view-select"
+                onchange="updateEngagementView(this.value)"
+                id="engagementViewSelect"
+              >
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
+            <div class="engagement-metrics">
+              <div class="engagement-chart">
+                <canvas id="engagementChart"></canvas>
+              </div>
+              <div class="engagement-stats" id="engagementStatsList">
+                <!-- Engagement stats will be dynamically added -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Discussions Section -->
+      <section id="discussions-section" class="content-section">
+        <div class="dashboard-header">
+          <h1 class="page-title">Discussions</h1>
+          <button
+            class="create-btn"
+            onclick="openModal('createAnnouncementModal')"
+          >
+            <span>+</span> New Announcement
+          </button>
+        </div>
+
+        <!-- Discussion Controls -->
+        <div class="discussion-controls">
+          <div class="filter-group">
+            <button
+              class="filter-btn active"
+              onclick="filterDiscussions('all')"
+            >
+              All
+            </button>
+            <button
+              class="filter-btn"
+              onclick="filterDiscussions('announcements')"
+            >
+              Announcements
+            </button>
+            <button
+              class="filter-btn"
+              onclick="filterDiscussions('course-discussions')"
+            >
+              Course Discussions
+            </button>
+            <button class="filter-btn" onclick="filterDiscussions('questions')">
+              Q&A
+            </button>
+          </div>
+          <div class="search-box">
+            <input
+              type="text"
+              placeholder="Search discussions..."
+              oninput="searchDiscussions(this.value)"
+              id="discussionSearch"
+            />
+            <button class="search-btn">🔍</button>
+          </div>
+        </div>
+
+        <!-- Pinned Topics -->
+        <div class="pinned-topics">
+          <div class="section-header">
+            <h2>📌 Pinned Topics</h2>
+          </div>
+          <div id="pinnedTopicsList">
+            <!-- Pinned topics will be dynamically inserted here -->
+          </div>
+        </div>
+
+        <!-- Recent Discussions -->
+        <div class="recent-discussions">
+          <div class="section-header">
+            <h2>Recent Discussions</h2>
+            <select
+              class="sort-select"
+              onchange="sortDiscussions(this.value)"
+              id="discussionSort"
+            >
+              <option value="recent">Most Recent</option>
+              <option value="active">Most Active</option>
+              <option value="unanswered">Unanswered</option>
+            </select>
+          </div>
+          <div id="recentDiscussionsList">
+            <!-- Recent discussions will be dynamically inserted here -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Earnings Section -->
+      <section id="earnings-section" class="content-section">
+        <div class="dashboard-header">
+          <h1 class="page-title">Earnings</h1>
+          <div class="header-actions">
+            <select
+              class="time-range-select"
+              onchange="updateEarningsRange(this.value)"
+              id="earningsRange"
+            >
+              <option value="7">Last 7 days</option>
+              <option value="30" selected>Last 30 days</option>
+              <option value="90">Last 90 days</option>
+              <option value="365">Last year</option>
+              <option value="all">All time</option>
+            </select>
+            <button class="export-btn" onclick="exportEarningsReport()">
+              <span>📥</span> Export Statement
+            </button>
+          </div>
+        </div>
+
+        <!-- Earnings Overview -->
+        <div class="earnings-overview">
+          <div class="earnings-card total">
+            <div class="card-header">
+              <h2>Total Earnings</h2>
+              <select
+                class="period-select"
+                onchange="updateEarningsPeriod(this.value)"
+                id="earningsPeriod"
+              >
+                <option value="month">This Month</option>
+                <option value="year">This Year</option>
+              </select>
+            </div>
+            <div class="earnings-amount" id="totalEarnings">$0.00</div>
+            <div class="earnings-trend" id="earningsTrend">
+              <span class="trend-icon">↑</span>
+              <span class="trend-value">0.0%</span>
+              <span class="trend-label">vs last period</span>
+            </div>
+          </div>
+
+          <div class="earnings-card">
+            <div class="card-header">
+              <h2>Pending Payout</h2>
+            </div>
+            <div class="earnings-amount" id="pendingPayout">$0.00</div>
+            <div class="payout-info" id="payoutDate">
+              Next payout: Calculating...
+            </div>
+            <button class="withdraw-btn" onclick="initiateWithdrawal()">
+              Withdraw Funds
+            </button>
+          </div>
+
+          <div class="earnings-card">
+            <div class="card-header">
+              <h2>Revenue by Course</h2>
+            </div>
+            <div class="course-revenue-list" id="courseRevenueList">
+              <!-- Course revenue items will be dynamically inserted here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Earnings Chart -->
+        <div class="earnings-chart-card">
+          <div class="card-header">
+            <h2>Revenue Overview</h2>
+            <div class="chart-controls">
+              <button
+                class="chart-btn active"
+                onclick="updateRevenueView('revenue')"
+              >
+                Revenue
+              </button>
+              <button class="chart-btn" onclick="updateRevenueView('sales')">
+                Sales
+              </button>
+              <button class="chart-btn" onclick="updateRevenueView('average')">
+                Average
+              </button>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="earningsChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings Section -->
+      <section id="settings-section" class="content-section">
+        <div class="dashboard-header">
+          <h1 class="page-title">Settings</h1>
+        </div>
+
+        <div class="settings-container">
+          <!-- Settings Navigation -->
+          <div class="settings-nav">
+            <a
+              href="#profile"
+              class="settings-link active"
+              onclick="switchSettingsTab('profile')"
+            >
+              Profile Settings
+            </a>
+            <a
+              href="#account"
+              class="settings-link"
+              onclick="switchSettingsTab('account')"
+            >
+              Account Security
+            </a>
+            <a
+              href="#notifications"
+              class="settings-link"
+              onclick="switchSettingsTab('notifications')"
+            >
+              Notifications
+            </a>
+            <a
+              href="#payment"
+              class="settings-link"
+              onclick="switchSettingsTab('payment')"
+            >
+              Payment Methods
+            </a>
+          </div>
+
+          <!-- Settings Content -->
+          <div class="settings-content">
+            <!-- Profile Settings Panel -->
+            <div id="profile-settings" class="settings-panel active">
+              <h2 class="panel-title">Profile Settings</h2>
+              <div class="profile-header">
+                <div class="profile-avatar">
+                  <img
+                    src="/api/placeholder/150/150"
+                    alt="Profile Picture"
+                    id="profilePicturePreview"
+                  />
+                  <input
+                    type="file"
+                    id="profilePictureInput"
+                    accept="image/*"
+                    style="display: none"
+                  />
+                  <button
+                    type="button"
+                    class="change-avatar"
+                    id="changeProfilePicture"
+                  >
+                    Change Photo
+                  </button>
+                </div>
+              </div>
+              <form
+                id="profileForm"
+                class="settings-form"
+                onsubmit="handleProfileUpdate(event)"
+              >
+                <div class="form-group">
+                  <label for="settingsName">Full Name</label>
+                  <input
+                    type="text"
+                    id="settingsName"
+                    name="name"
+                    class="form-input"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="settingsEmail">Email</label>
+                  <input
+                    type="email"
+                    id="settingsEmail"
+                    name="email"
+                    class="form-input"
+                    required
+                    readonly
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="settingsPhone">Phone (Optional)</label>
+                  <input
+                    type="tel"
+                    id="settingsPhone"
+                    name="phone"
+                    class="form-input"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="settingsBio">Bio</label>
+                  <textarea
+                    id="settingsBio"
+                    name="bio"
+                    class="form-input"
+                    rows="4"
+                  ></textarea>
+                </div>
+
+                <div class="form-actions">
+                  <button
+                    type="button"
+                    class="btn-secondary"
+                    onclick="resetForm('profileForm')"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" class="btn-primary">
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Other settings panels will be shown/hidden based on navigation -->
+            <!-- Account Security Panel -->
+            <div id="account-settings" class="settings-panel">
+              <h2 class="panel-title">Account Security</h2>
+              <form
+                id="securityForm"
+                class="settings-form"
+                onsubmit="handleSecurityUpdate(event)"
+              >
+                <div class="form-group">
+                  <label for="currentPassword">Current Password</label>
+                  <input
+                    type="password"
+                    id="currentPassword"
+                    name="currentPassword"
+                    class="form-input"
+                    placeholder="Enter your current password"
+                  />
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="newPassword">New Password</label>
+                    <input
+                      type="password"
+                      id="newPassword"
+                      name="newPassword"
+                      class="form-input"
+                      placeholder="Enter new password"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="confirmPassword">Confirm New Password</label>
+                    <input
+                      type="password"
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      class="form-input"
+                      placeholder="Confirm new password"
+                    />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Two-Factor Authentication</label>
+                  <div class="toggle-option">
+                    <div class="toggle-info">
+                      <h4>Enable Two-Factor Authentication</h4>
+                      <p>Add an extra layer of security to your account</p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input
+                        type="checkbox"
+                        id="twoFactorAuth"
+                        name="twoFactorAuth"
+                      />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Login History</label>
+                  <div class="login-history">
+                    <div class="history-item">
+                      <div class="device-info">
+                        <h4>Current Session</h4>
+                        <p>Chrome on Windows • IP: 192.168.1.1</p>
+                      </div>
+                      <div class="login-time">Today, 2:30 PM</div>
+                    </div>
+                    <div class="history-item">
+                      <div class="device-info">
+                        <h4>Previous Login</h4>
+                        <p>Safari on iPhone • IP: 192.168.1.2</p>
+                      </div>
+                      <div class="login-time">Yesterday, 10:15 AM</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <button
+                    type="button"
+                    class="btn-secondary"
+                    onclick="resetForm('securityForm')"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" class="btn-primary">
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Notifications Panel -->
+            <div id="notifications-settings" class="settings-panel">
+              <h2 class="panel-title">Notification Settings</h2>
+              <form
+                id="notificationsForm"
+                class="settings-form"
+                onsubmit="handleNotificationsUpdate(event)"
+              >
+                <div class="notification-group">
+                  <h3>Email Notifications</h3>
+                  <div class="toggle-option">
+                    <div class="toggle-info">
+                      <h4>Student Enrollments</h4>
+                      <p>
+                        Receive notifications when new students enroll in your
+                        courses
+                      </p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input
+                        type="checkbox"
+                        id="notifEnrollments"
+                        name="notifEnrollments"
+                        checked
+                      />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div class="toggle-option">
+                    <div class="toggle-info">
+                      <h4>Assignment Submissions</h4>
+                      <p>
+                        Receive notifications when students submit assignments
+                      </p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input
+                        type="checkbox"
+                        id="notifSubmissions"
+                        name="notifSubmissions"
+                        checked
+                      />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div class="toggle-option">
+                    <div class="toggle-info">
+                      <h4>Course Reviews</h4>
+                      <p>Receive notifications when students leave reviews</p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input
+                        type="checkbox"
+                        id="notifReviews"
+                        name="notifReviews"
+                        checked
+                      />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div class="toggle-option">
+                    <div class="toggle-info">
+                      <h4>Discussion Questions</h4>
+                      <p>
+                        Receive notifications for new questions in your course
+                        discussions
+                      </p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input
+                        type="checkbox"
+                        id="notifDiscussions"
+                        name="notifDiscussions"
+                        checked
+                      />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="notification-group">
+                  <h3>Platform Notifications</h3>
+                  <div class="toggle-option">
+                    <div class="toggle-info">
+                      <h4>Earnings Reports</h4>
+                      <p>Receive weekly and monthly earnings reports</p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input
+                        type="checkbox"
+                        id="notifEarnings"
+                        name="notifEarnings"
+                        checked
+                      />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div class="toggle-option">
+                    <div class="toggle-info">
+                      <h4>Platform Updates</h4>
+                      <p>
+                        Receive notifications about new features and platform
+                        updates
+                      </p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input
+                        type="checkbox"
+                        id="notifPlatform"
+                        name="notifPlatform"
+                        checked
+                      />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div class="toggle-option">
+                    <div class="toggle-info">
+                      <h4>Marketing Tips</h4>
+                      <p>
+                        Receive periodic tips on how to promote your courses
+                      </p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input
+                        type="checkbox"
+                        id="notifMarketing"
+                        name="notifMarketing"
+                      />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button
+                    type="button"
+                    class="btn-secondary"
+                    onclick="resetForm('notificationsForm')"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" class="btn-primary">
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Payment Methods Panel -->
+            <div id="payment-settings" class="settings-panel">
+              <h2 class="panel-title">Payment Methods</h2>
+              <form
+                id="paymentForm"
+                class="settings-form"
+                onsubmit="handlePaymentUpdate(event)"
+              >
+                <div class="payment-section">
+                  <h3>Payout Methods</h3>
+                  <p class="section-desc">
+                    Choose how you want to receive your earnings
+                  </p>
+
+                  <div class="payment-options">
+                    <div class="payment-method">
+                      <input
+                        type="radio"
+                        id="bankTransfer"
+                        name="payoutMethod"
+                        value="bank"
+                        checked
+                      />
+                      <label for="bankTransfer">
+                        <div class="method-name">Bank Transfer</div>
+                        <div class="method-desc">
+                          Direct deposit to your bank account
+                        </div>
+                      </label>
+                    </div>
+
+                    <div class="payment-method">
+                      <input
+                        type="radio"
+                        id="paypal"
+                        name="payoutMethod"
+                        value="paypal"
+                      />
+                      <label for="paypal">
+                        <div class="method-name">PayPal</div>
+                        <div class="method-desc">
+                          Send money to your PayPal account
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  class="payment-section bank-details"
+                  id="bankDetailsSection"
+                >
+                  <h3>Bank Account Details</h3>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="accountName">Account Holder Name</label>
+                      <input
+                        type="text"
+                        id="accountName"
+                        name="accountName"
+                        class="form-input"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="bankName">Bank Name</label>
+                      <input
+                        type="text"
+                        id="bankName"
+                        name="bankName"
+                        class="form-input"
+                      />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="accountNumber">Account Number</label>
+                      <input
+                        type="text"
+                        id="accountNumber"
+                        name="accountNumber"
+                        class="form-input"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="routingNumber">Routing Number</label>
+                      <input
+                        type="text"
+                        id="routingNumber"
+                        name="routingNumber"
+                        class="form-input"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  class="payment-section paypal-details"
+                  id="paypalDetailsSection"
+                  style="display: none"
+                >
+                  <h3>PayPal Details</h3>
+                  <div class="form-group">
+                    <label for="paypalEmail">PayPal Email</label>
+                    <input
+                      type="email"
+                      id="paypalEmail"
+                      name="paypalEmail"
+                      class="form-input"
+                    />
+                  </div>
+                </div>
+
+                <div class="payment-section">
+                  <h3>Payment Schedule</h3>
+                  <div class="form-group">
+                    <label for="payoutFrequency">Payout Frequency</label>
+                    <select
+                      id="payoutFrequency"
+                      name="payoutFrequency"
+                      class="form-input"
+                    >
+                      <option value="monthly">Monthly (Default)</option>
+                      <option value="biweekly">Bi-weekly</option>
+                      <option value="weekly">Weekly</option>
+                    </select>
+                    <p class="form-help">Minimum payout amount is $50</p>
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button
+                    type="button"
+                    class="btn-secondary"
+                    onclick="resetForm('paymentForm')"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" class="btn-primary">
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Modals -->
+      <!-- Create Course Modal -->
+      <div id="createCourseModal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 id="courseModalTitle">Create New Course</h2>
+            <button
+              class="close-modal"
+              onclick="closeModal('createCourseModal')"
+            >
+              ×
+            </button>
+          </div>
+          <form id="createCourseForm" onsubmit="handleCourseSubmit(event)">
+            <input type="hidden" id="courseId" name="courseId" />
+            <div class="form-group">
+              <label for="courseTitle">Course Title</label>
+              <input
+                type="text"
+                id="courseTitle"
+                name="title"
+                required
+                class="form-input"
+              />
+            </div>
+            <div class="form-group">
+              <label for="courseDescription">Course Description</label>
+              <textarea
+                id="courseDescription"
+                name="description"
+                required
+                class="form-input"
+                rows="4"
+              ></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="courseCategory">Category</label>
+                <select
+                  id="courseCategory"
+                  name="category"
+                  required
+                  class="form-input"
+                >
+                  <option value="">Select Category</option>
+                  <option value="web-development">Web Development</option>
+                  <option value="data-science">Data Science</option>
+                  <option value="design">Design</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="coursePrice">Price ($)</label>
+                <input
+                  type="number"
+                  id="coursePrice"
+                  name="price"
+                  min="0"
+                  step="0.01"
+                  required
+                  class="form-input"
+                />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="courseThumbnail">Course Thumbnail</label>
+              <input
+                type="file"
+                id="courseThumbnail"
+                name="thumbnail"
+                accept="image/*"
+                class="form-input"
+              />
+            </div>
+            <div class="form-actions">
+              <button
+                type="button"
+                class="btn-secondary"
+                onclick="closeModal('createCourseModal')"
+              >
+                Cancel
+              </button>
+              <button type="submit" class="btn-primary">Save Course</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Create Announcement Modal -->
+      <div id="createAnnouncementModal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>Create New Announcement</h2>
+            <button
+              class="close-modal"
+              onclick="closeModal('createAnnouncementModal')"
+            >
+              ×
+            </button>
+          </div>
+          <form
+            id="announcementForm"
+            onsubmit="handleAnnouncementSubmit(event)"
+          >
+            <div class="form-group">
+              <label for="announcementTitle">Title</label>
+              <input
+                type="text"
+                id="announcementTitle"
+                name="title"
+                required
+                class="form-input"
+              />
+            </div>
+            <div class="form-group">
+              <label for="announcementCourse">Course</label>
+              <select
+                id="announcementCourse"
+                name="courseId"
+                required
+                class="form-input"
+              >
+                <option value="">Select Course</option>
+                <option value="all">All Courses</option>
+                <!-- Course options will be dynamically added -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="announcementContent">Content</label>
+              <textarea
+                id="announcementContent"
+                name="content"
+                required
+                class="form-input"
+                rows="6"
+              ></textarea>
+            </div>
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="pinAnnouncement" name="pinned" />
+                Pin this announcement
+              </label>
+            </div>
+            <div class="form-actions">
+              <button
+                type="button"
+                class="btn-secondary"
+                onclick="closeModal('createAnnouncementModal')"
+              >
+                Cancel
+              </button>
+              <button type="submit" class="btn-primary">
+                Post Announcement
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Withdrawal Modal -->
+      <div id="withdrawalModal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>Withdraw Funds</h2>
+            <button class="close-modal" onclick="closeModal('withdrawalModal')">
+              ×
+            </button>
+          </div>
+          <form id="withdrawalForm" onsubmit="handleWithdrawal(event)">
+            <div class="form-group">
+              <label>Available Balance</label>
+              <input
+                type="text"
+                id="availableBalance"
+                readonly
+                class="form-input"
+              />
+            </div>
+            <div class="form-group">
+              <label>Withdrawal Amount</label>
+              <input
+                type="number"
+                id="withdrawalAmount"
+                min="0"
+                step="0.01"
+                required
+                class="form-input"
+              />
+            </div>
+            <div class="form-group">
+              <label>Payment Method</label>
+              <select id="withdrawalMethod" required class="form-input">
+                <option value="bank">Bank Transfer</option>
+                <option value="paypal">PayPal</option>
+              </select>
+            </div>
+            <div class="form-actions">
+              <button
+                type="button"
+                class="btn-secondary"
+                onclick="closeModal('withdrawalModal')"
+              >
+                Cancel
+              </button>
+              <button type="submit" class="btn-primary">Withdraw</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Toast Container -->
+      <div id="toastContainer" class="toast-container"></div>
+    </main>
+
+    <script src="scripts/instructor.js"></script>
+  </body>
+</html>

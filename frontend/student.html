@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>iLearn - Student Portal</title>
+    <link rel="stylesheet" href="assets/student.css" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a href="#" class="logo">
+        <img src="assets/logo-icon.png" alt="iLearn Logo" class="logo-img" />
+        iLearn
+      </a>
+      <ul class="nav-menu">
+        <li class="nav-item">
+          <a href="#dashboard" class="nav-link active">
+            <span class="nav-icon">📊</span>
+            Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#courses" class="nav-link">
+            <span class="nav-icon">📚</span>
+            My Courses
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#assignments" class="nav-link">
+            <span class="nav-icon">📝</span>
+            Assignments
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#grades" class="nav-link">
+            <span class="nav-icon">📈</span>
+            Grades
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#calendar" class="nav-link">
+            <span class="nav-icon">📅</span>
+            Calendar
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#messages" class="nav-link">
+            <span class="nav-icon">💬</span>
+            Messages
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#settings" class="nav-link">
+            <span class="nav-icon">⚙️</span>
+            Settings
+          </a>
+        </li>
+      </ul>
+      <!-- Dynamic User Profile -->
+      <div class="user-profile">
+        <img
+          src="/api/placeholder/100/100"
+          alt="Profile"
+          class="profile-img"
+          id="userProfileImage"
+        />
+        <div class="profile-info">
+          <div class="profile-name" id="userName"></div>
+          <div class="profile-email" id="userEmail"></div>
+          <button class="signout-btn">
+            <span class="signout-icon">🚪</span>
+            Sign Out
+          </button>
+        </div>
+      </div>
+
+      <div
+        class="profile-picture-upload"
+        id="profilePictureModal"
+        style="display: none"
+      >
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Update Profile Picture</h3>
+            <button class="close-modal" id="closeProfileModal">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="upload-preview">
+              <img
+                src="/api/placeholder/200/200"
+                alt="Preview"
+                id="uploadPreview"
+              />
+            </div>
+            <div class="upload-controls">
+              <input
+                type="file"
+                id="profileImageInput"
+                accept="image/*"
+                style="display: none"
+              />
+              <button class="upload-btn" id="chooseFileBtn">Choose File</button>
+              <p class="upload-note">JPG, PNG or GIF. Maximum size 2MB.</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary" id="cancelUpload">Cancel</button>
+            <button class="btn-primary" id="saveProfilePicture" disabled>
+              Save Picture
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <!-- Dashboard Section -->
+      <section id="dashboard-section" class="content-section active">
+        <div class="dashboard-header">
+          <h1 class="page-title" id="welcomeMessage"></h1>
+          <div class="notification-center">
+            <div class="notification-bell" id="notificationBell">
+              <span>🔔</span>
+              <span class="notification-badge" id="notificationCount">3</span>
+            </div>
+            <div class="notification-dropdown" id="notificationDropdown">
+              <div class="notification-header">
+                <h3>Notifications</h3>
+                <button class="mark-all-read">Mark all as read</button>
+              </div>
+              <div class="notification-list" id="notificationList">
+                <div class="notification-item unread">
+                  <div class="notification-icon assignment">📝</div>
+                  <div class="notification-content">
+                    <p>
+                      New assignment posted in
+                      <strong>Web Development Fundamentals</strong>
+                    </p>
+                    <span class="notification-time">2 hours ago</span>
+                  </div>
+                  <div class="notification-actions">
+                    <button class="notification-action">View</button>
+                  </div>
+                </div>
+                <div class="notification-item unread">
+                  <div class="notification-icon grade">📊</div>
+                  <div class="notification-content">
+                    <p>
+                      Your assignment <strong>Algorithm Analysis</strong> has
+                      been graded
+                    </p>
+                    <span class="notification-time">Yesterday</span>
+                  </div>
+                  <div class="notification-actions">
+                    <button class="notification-action">View</button>
+                  </div>
+                </div>
+                <div class="notification-item unread">
+                  <div class="notification-icon message">💬</div>
+                  <div class="notification-content">
+                    <p><strong>Dr. Alice Johnson</strong> sent you a message</p>
+                    <span class="notification-time">2 days ago</span>
+                  </div>
+                  <div class="notification-actions">
+                    <button class="notification-action">Reply</button>
+                  </div>
+                </div>
+                <div class="notification-item">
+                  <div class="notification-icon course">📚</div>
+                  <div class="notification-content">
+                    <p>
+                      You've completed <strong>JavaScript Basics</strong> lesson
+                    </p>
+                    <span class="notification-time">3 days ago</span>
+                  </div>
+                  <div class="notification-actions">
+                    <button class="notification-action">Continue</button>
+                  </div>
+                </div>
+              </div>
+              <div class="notification-footer">
+                <a href="#notifications" class="view-all-notifications"
+                  >View all notifications</a
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid" id="statsGrid"></div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+          <!-- Course Progress -->
+          <div class="dashboard-card courses-overview">
+            <div class="card-header">
+              <h2>Current Courses</h2>
+              <a href="#courses" class="view-all">View All</a>
+            </div>
+            <div class="course-progress-list" id="courseProgressList"></div>
+          </div>
+
+          <!-- Upcoming Deadlines -->
+          <div class="dashboard-card upcoming-deadlines">
+            <div class="card-header">
+              <h2>Upcoming Deadlines</h2>
+              <a href="#calendar" class="view-all">View Calendar</a>
+            </div>
+            <div class="deadline-list" id="deadlineList"></div>
+          </div>
+
+          <!-- Recent Activity -->
+          <div class="dashboard-card recent-activity">
+            <div class="card-header">
+              <h2>Recent Activity</h2>
+              <button class="clear-all">Clear All</button>
+            </div>
+            <div class="activity-list" id="activityList"></div>
+          </div>
+
+          <!-- Learning Streak -->
+          <div class="dashboard-card learning-streak">
+            <div class="card-header">
+              <h2>Learning Streak</h2>
+              <span class="streak-count" id="streakCount"></span>
+            </div>
+            <div class="streak-calendar" id="streakCalendar"></div>
+            <div class="streak-message" id="streakMessage"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Courses Section -->
+      <section id="courses-section" class="content-section">
+        <div class="dashboard-header">
+          <h1 class="page-title">My Courses</h1>
+          <div class="notification-bell">🔔</div>
+        </div>
+        <div class="course-filters">
+          <button class="filter-btn active">All Courses</button>
+          <button class="filter-btn">In Progress</button>
+          <button class="filter-btn">Completed</button>
+        </div>
+        <div class="course-grid" id="courseGrid"></div>
+      </section>
+
+      <!-- Assignments Section -->
+      <section id="assignments-section" class="content-section">
+        <div class="dashboard-header">
+          <h1 class="page-title">Assignments</h1>
+          <div class="notification-bell">🔔</div>
+        </div>
+        <div class="assignments-container">
+          <div class="assignment-filters">
+            <button class="filter-btn active">All</button>
+            <button class="filter-btn">Pending</button>
+            <button class="filter-btn">Submitted</button>
+            <button class="filter-btn">Graded</button>
+          </div>
+          <div class="assignment-list" id="assignmentList"></div>
+        </div>
+      </section>
+
+      <!-- Grades Section -->
+      <section id="grades-section" class="content-section">
+        <div class="dashboard-header">
+          <h1 class="page-title">Grades</h1>
+          <div class="notification-bell">🔔</div>
+        </div>
+        <div class="gpa-card">
+          <div class="gpa-info">
+            <div class="gpa-label">Overall GPA</div>
+            <div class="gpa-value" id="overallGPA">0.0</div>
+          </div>
+          <div class="grade-distribution">
+            <div class="grade-bar">
+              <div class="grade-fill" id="gradeDistribution"></div>
+            </div>
+            <div class="grade-labels">
+              <span>Current Term</span>
+              <span id="termAverage">0%</span>
+            </div>
+          </div>
+        </div>
+        <div class="course-grades" id="courseGrades"></div>
+      </section>
+
+      <!-- Calendar Section -->
+      <section id="calendar-section" class="content-section">
+        <div class="dashboard-header">
+          <h1 class="page-title">Calendar</h1>
+          <div class="notification-bell">🔔</div>
+        </div>
+        <div class="calendar-container">
+          <div class="calendar-header">
+            <div class="month-selector">
+              <button class="month-nav">←</button>
+              <h2 id="currentMonth"></h2>
+              <button class="month-nav">→</button>
+            </div>
+            <div class="view-options">
+              <button class="view-btn active">Month</button>
+              <button class="view-btn">Week</button>
+              <button class="view-btn">Day</button>
+            </div>
+          </div>
+          <div class="calendar-grid">
+            <div class="days-header">
+              <div class="day-name">Sun</div>
+              <div class="day-name">Mon</div>
+              <div class="day-name">Tue</div>
+              <div class="day-name">Wed</div>
+              <div class="day-name">Thu</div>
+              <div class="day-name">Fri</div>
+              <div class="day-name">Sat</div>
+            </div>
+            <div class="calendar-days" id="calendarDays"></div>
+          </div>
+          <div class="upcoming-events">
+            <h3>Upcoming Events</h3>
+            <div class="event-list" id="upcomingEvents"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Messages Section -->
+      <section id="messages-section" class="content-section">
+        <div class="dashboard-header">
+          <h1 class="page-title">Messages</h1>
+          <div class="notification-bell">🔔</div>
+        </div>
+        <div class="messages-container">
+          <div class="messages-sidebar">
+            <div class="messages-search">
+              <input
+                type="text"
+                placeholder="Search messages..."
+                class="search-input"
+              />
+            </div>
+            <div class="message-threads" id="messageThreads"></div>
+          </div>
+          <div class="messages-main">
+            <div class="chat-header" id="chatHeader"></div>
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input">
+              <input
+                type="text"
+                placeholder="Type your message..."
+                class="message-input"
+              />
+              <button class="send-btn">📎</button>
+              <button class="send-btn">Send</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings Section -->
+      <section id="settings-section" class="content-section">
+        <div class="dashboard-header">
+          <h1 class="page-title">Settings</h1>
+          <div class="notification-bell">🔔</div>
+        </div>
+        <div class="settings-container">
+          <div class="settings-sidebar">
+            <div class="settings-nav">
+              <a href="#profile" class="settings-link active"
+                >Profile Settings</a
+              >
+              <a href="#account" class="settings-link">Account Security</a>
+              <a href="#notifications" class="settings-link">Notifications</a>
+              <a href="#privacy" class="settings-link">Privacy</a>
+              <a href="#preferences" class="settings-link">Preferences</a>
+            </div>
+          </div>
+          <div class="settings-main">
+            <div class="profile-header">
+              <div class="profile-avatar">
+                <img
+                  src="/api/placeholder/150/150"
+                  alt="Profile Picture"
+                  id="profilePicturePreview"
+                />
+                <input
+                  type="file"
+                  id="profilePictureInput"
+                  accept="image/*"
+                  style="display: none"
+                />
+                <button
+                  type="button"
+                  class="change-avatar"
+                  id="changeProfilePicture"
+                >
+                  Change Photo
+                </button>
+              </div>
+              <div class="profile-status">
+                <span class="status-badge">Student</span>
+                <span class="member-since">Member since January 2023</span>
+              </div>
+            </div>
+
+            <!-- Account Security Panel -->
+            <div class="settings-panel" id="account-settings">
+              <h2 class="panel-title">Account Security</h2>
+              <form class="settings-form" id="securityForm">
+                <div class="form-group">
+                  <label>Current Password</label>
+                  <input
+                    type="password"
+                    id="currentPassword"
+                    class="form-input"
+                    placeholder="Enter your current password"
+                  />
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>New Password</label>
+                    <input
+                      type="password"
+                      id="newPassword"
+                      class="form-input"
+                      placeholder="Enter new password"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <input
+                      type="password"
+                      id="confirmPassword"
+                      class="form-input"
+                      placeholder="Confirm new password"
+                    />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Two-Factor Authentication</label>
+                  <div class="toggle-option">
+                    <div class="toggle-info">
+                      <h4>Enable Two-Factor Authentication</h4>
+                      <p>Add an extra layer of security to your account</p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="twoFactorAuth" />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Login History</label>
+                  <div class="login-history">
+                    <div class="history-item">
+                      <div class="device-info">
+                        <h4>Current Session</h4>
+                        <p>Chrome on Windows • IP: 192.168.1.1</p>
+                      </div>
+                      <div class="login-time">Today, 2:30 PM</div>
+                    </div>
+                    <div class="history-item">
+                      <div class="device-info">
+                        <h4>Previous Login</h4>
+                        <p>Safari on iPhone • IP: 192.168.1.2</p>
+                      </div>
+                      <div class="login-time">Yesterday, 10:15 AM</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <button type="button" class="btn-secondary">Cancel</button>
+                  <button type="submit" class="btn-primary">
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Notifications Panel -->
+            <div class="settings-panel" id="notifications-settings">
+              <h2 class="panel-title">Notification Settings</h2>
+              <form class="settings-form" id="notificationsForm">
+                <div class="notification-group">
+                  <h3>Email Notifications</h3>
+                  <div class="toggle-option">
+                    <div class="toggle-info">
+                      <h4>Assignment Updates</h4>
+                      <p>
+                        Receive notifications about new assignments and due
+                        dates
+                      </p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="notifAssignments" checked />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div class="toggle-option">
+                    <div class="toggle-info">
+                      <h4>Grade Updates</h4>
+                      <p>Receive notifications when grades are posted</p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="notifGrades" checked />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div class="toggle-option">
+                    <div class="toggle-info">
+                      <h4>Course Announcements</h4>
+                      <p>Receive important announcements from your courses</p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="notifAnnouncements" checked />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div class="toggle-option">
+                    <div class="toggle-info">
+                      <h4>Discussion Updates</h4>
+                      <p>
+                        Receive notifications about new replies to your posts
+                      </p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="notifDiscussions" />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="notification-group">
+                  <h3>Push Notifications</h3>
+                  <div class="toggle-option">
+                    <div class="toggle-info">
+                      <h4>Enable Push Notifications</h4>
+                      <p>
+                        Receive notifications directly to your browser or mobile
+                        device
+                      </p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="pushNotifications" checked />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div class="toggle-option">
+                    <div class="toggle-info">
+                      <h4>Assignment Reminders</h4>
+                      <p>Receive reminders for upcoming assignment deadlines</p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="pushAssignments" checked />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div class="toggle-option">
+                    <div class="toggle-info">
+                      <h4>New Messages</h4>
+                      <p>Receive notifications for new messages</p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="pushMessages" checked />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button type="button" class="btn-secondary">Cancel</button>
+                  <button type="submit" class="btn-primary">
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Privacy Panel -->
+            <div class="settings-panel" id="privacy-settings">
+              <h2 class="panel-title">Privacy Settings</h2>
+              <form class="settings-form" id="privacyForm">
+                <div class="privacy-group">
+                  <h3>Profile Visibility</h3>
+                  <div class="toggle-option">
+                    <div class="toggle-info">
+                      <h4>Show Online Status</h4>
+                      <p>Allow others to see when you're online</p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="showOnlineStatus" checked />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div class="toggle-option">
+                    <div class="toggle-info">
+                      <h4>Show Profile Picture</h4>
+                      <p>Allow others to see your profile picture</p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="showProfilePicture" checked />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div class="toggle-option">
+                    <div class="toggle-info">
+                      <h4>Show Activity Status</h4>
+                      <p>Allow others to see your recent activity</p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="showActivityStatus" />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="privacy-group">
+                  <h3>Data Privacy</h3>
+                  <div class="toggle-option">
+                    <div class="toggle-info">
+                      <h4>Store Learning Progress</h4>
+                      <p>
+                        Save your learning progress to improve your experience
+                      </p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input
+                        type="checkbox"
+                        id="storeLearningProgress"
+                        checked
+                      />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div class="toggle-option">
+                    <div class="toggle-info">
+                      <h4>Allow Analytics</h4>
+                      <p>
+                        Help us improve by allowing anonymous usage data
+                        collection
+                      </p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="allowAnalytics" checked />
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button type="button" class="btn-danger">
+                    Delete Account
+                  </button>
+                  <button type="button" class="btn-secondary">Cancel</button>
+                  <button type="submit" class="btn-primary">
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Preferences Panel -->
+            <div class="settings-panel" id="preferences-settings">
+              <h2 class="panel-title">Preferences</h2>
+              <form class="settings-form" id="preferencesForm">
+                <div class="form-group">
+                  <label>Language</label>
+                  <select id="settingsLanguage" class="form-input">
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                    <option value="fr">Français</option>
+                    <option value="de">Deutsch</option>
+                    <option value="zh">中文</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label>Timezone</label>
+                  <select id="settingsTimezone" class="form-input">
+                    <option value="UTC">
+                      UTC (Coordinated Universal Time)
+                    </option>
+                    <option value="EST">EST (Eastern Standard Time)</option>
+                    <option value="CST">CST (Central Standard Time)</option>
+                    <option value="MST">MST (Mountain Standard Time)</option>
+                    <option value="PST">PST (Pacific Standard Time)</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label>Theme</label>
+                  <div class="theme-options">
+                    <label class="theme-option">
+                      <input type="radio" name="theme" value="light" checked />
+                      <div class="theme-preview light-theme">
+                        <div class="theme-label">Light</div>
+                      </div>
+                    </label>
+                    <label class="theme-option">
+                      <input type="radio" name="theme" value="dark" />
+                      <div class="theme-preview dark-theme">
+                        <div class="theme-label">Dark</div>
+                      </div>
+                    </label>
+                    <label class="theme-option">
+                      <input type="radio" name="theme" value="auto" />
+                      <div class="theme-preview auto-theme">
+                        <div class="theme-label">System</div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>Font Size</label>
+                  <div class="font-size-slider">
+                    <span>A</span>
+                    <input
+                      type="range"
+                      min="12"
+                      max="20"
+                      value="16"
+                      class="slider"
+                      id="fontSizeSlider"
+                    />
+                    <span>A</span>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>Email Digest</label>
+                  <select id="emailDigest" class="form-input">
+                    <option value="daily">Daily</option>
+                    <option value="weekly" selected>Weekly</option>
+                    <option value="never">Never</option>
+                  </select>
+                </div>
+
+                <div class="form-actions">
+                  <button type="button" class="btn-secondary">
+                    Reset to Defaults
+                  </button>
+                  <button type="submit" class="btn-primary">
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div class="settings-panel active" id="profile-settings">
+              <h2 class="panel-title">Profile Settings</h2>
+              <form class="settings-form" id="profileForm">
+                <div class="form-group">
+                  <label>Full Name</label>
+                  <input type="text" id="settingsName" class="form-input" />
+                </div>
+                <div class="form-group">
+                  <label>Email</label>
+                  <input type="email" id="settingsEmail" class="form-input" />
+                </div>
+                <div class="form-group">
+                  <label>Phone</label>
+                  <input type="tel" id="settingsPhone" class="form-input" />
+                </div>
+                <div class="form-group">
+                  <label>Bio</label>
+                  <textarea
+                    id="settingsBio"
+                    class="form-input"
+                    rows="4"
+                  ></textarea>
+                </div>
+                <div class="form-actions">
+                  <button type="button" class="btn-secondary">Cancel</button>
+                  <button type="submit" class="btn-primary">
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="scripts/student.js"></script>
+  </body>
+</html>

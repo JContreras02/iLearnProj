@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Token Test</title>
+  </head>
+  <body>
+    <h1>Token Test</h1>
+    <div id="tokenDisplay">Checking token...</div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const token = localStorage.getItem("token");
+        document.getElementById("tokenDisplay").textContent = token
+          ? `Token exists: ${token.substring(0, 20)}...`
+          : "No token found";
+      });
+    </script>
+  </body>
+</html>
