@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require("express");
 const mysql = require("mysql2");
 const bodyParser = require("body-parser");
@@ -23,10 +24,10 @@ app.get("/instructor.html", (req, res) => {
 
 // MySQL Connection
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root", // Replace with your MySQL username
-  password: "Vanthang01", // Replace with your MySQL password
-  database: "ilearn", // Replace with your database name
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
 });
 
 db.connect((err) => {
@@ -37,7 +38,6 @@ db.connect((err) => {
   console.log("Connected to MySQL database");
 });
 
-require('dotenv').config();
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // Middleware to verify JWT token
