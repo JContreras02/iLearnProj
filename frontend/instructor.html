@@ -62,12 +62,6 @@
           </a>
         </li>
         <li class="nav-item">
-          <a href="#earnings" class="nav-link">
-            <span class="nav-icon">💰</span>
-            Earnings
-          </a>
-        </li>
-        <li class="nav-item">
           <a href="#settings" class="nav-link">
             <span class="nav-icon">⚙️</span>
             Settings
@@ -205,7 +199,6 @@
                     <div class="notification-content">
                       <div class="notification-text">
                         <strong>Earnings Update</strong>
-                        <p>You earned $120 this week from course sales</p>
                       </div>
                       <span class="notification-time">2 days ago</span>
                     </div>
@@ -256,10 +249,10 @@
           </div>
 
           <div class="stat-card">
-            <div class="stat-icon">💰</div>
+            <div class="stat-icon"></div>
             <div class="stat-info">
-              <span class="stat-value" id="monthlyEarnings">$0</span>
-              <span class="stat-label">Monthly Earnings</span>
+              <span class="stat-value" id="monthlyEarnings"></span>
+              <span class="stat-label">Coming Soon</span>
             </div>
           </div>
 
@@ -680,98 +673,6 @@
         </div>
       </section>
 
-      <!-- Earnings Section -->
-      <section id="earnings-section" class="content-section">
-        <div class="dashboard-header">
-          <h1 class="page-title">Earnings</h1>
-          <div class="header-actions">
-            <select
-              class="time-range-select"
-              onchange="updateEarningsRange(this.value)"
-              id="earningsRange"
-            >
-              <option value="7">Last 7 days</option>
-              <option value="30" selected>Last 30 days</option>
-              <option value="90">Last 90 days</option>
-              <option value="365">Last year</option>
-              <option value="all">All time</option>
-            </select>
-            <button class="export-btn" onclick="exportEarningsReport()">
-              <span>📥</span> Export Statement
-            </button>
-          </div>
-        </div>
-
-        <!-- Earnings Overview -->
-        <div class="earnings-overview">
-          <div class="earnings-card total">
-            <div class="card-header">
-              <h2>Total Earnings</h2>
-              <select
-                class="period-select"
-                onchange="updateEarningsPeriod(this.value)"
-                id="earningsPeriod"
-              >
-                <option value="month">This Month</option>
-                <option value="year">This Year</option>
-              </select>
-            </div>
-            <div class="earnings-amount" id="totalEarnings">$0.00</div>
-            <div class="earnings-trend" id="earningsTrend">
-              <span class="trend-icon">↑</span>
-              <span class="trend-value">0.0%</span>
-              <span class="trend-label">vs last period</span>
-            </div>
-          </div>
-
-          <div class="earnings-card">
-            <div class="card-header">
-              <h2>Pending Payout</h2>
-            </div>
-            <div class="earnings-amount" id="pendingPayout">$0.00</div>
-            <div class="payout-info" id="payoutDate">
-              Next payout: Calculating...
-            </div>
-            <button class="withdraw-btn" onclick="initiateWithdrawal()">
-              Withdraw Funds
-            </button>
-          </div>
-
-          <div class="earnings-card">
-            <div class="card-header">
-              <h2>Revenue by Course</h2>
-            </div>
-            <div class="course-revenue-list" id="courseRevenueList">
-              <!-- Course revenue items will be dynamically inserted here -->
-            </div>
-          </div>
-        </div>
-
-        <!-- Earnings Chart -->
-        <div class="earnings-chart-card">
-          <div class="card-header">
-            <h2>Revenue Overview</h2>
-            <div class="chart-controls">
-              <button
-                class="chart-btn active"
-                onclick="updateRevenueView('revenue')"
-              >
-                Revenue
-              </button>
-              <button class="chart-btn" onclick="updateRevenueView('sales')">
-                Sales
-              </button>
-              <button class="chart-btn" onclick="updateRevenueView('average')">
-                Average
-              </button>
-            </div>
-          </div>
-          <div class="chart-container">
-            <canvas id="earningsChart"></canvas>
-          </div>
-        </div>
-      </section>
-
       <!-- Settings Section -->
       <section id="settings-section" class="content-section">
         <div class="dashboard-header">
@@ -1076,10 +977,6 @@
                 <div class="notification-group">
                   <h3>Platform Notifications</h3>
                   <div class="toggle-option">
-                    <div class="toggle-info">
-                      <h4>Earnings Reports</h4>
-                      <p>Receive weekly and monthly earnings reports</p>
-                    </div>
                     <label class="toggle-switch">
                       <input
                         type="checkbox"
