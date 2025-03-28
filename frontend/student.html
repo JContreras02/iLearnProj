@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>iLearn - Student Portal</title>
     <link rel="stylesheet" href="assets/student.css" />
+    <link rel="icon" type="image/x-icon" href="./assets/logo-icon.png">
+
   </head>
   <body>
     <aside class="sidebar">
-      <a href="#" class="logo">
+      <a href="courses.html" class="logo">
         <img src="assets/logo-icon.png" alt="iLearn Logo" class="logo-img" />
         iLearn
       </a>
@@ -118,71 +120,8 @@
       <section id="dashboard-section" class="content-section active">
         <div class="dashboard-header">
           <h1 class="page-title" id="welcomeMessage"></h1>
-          <div class="notification-center">
-            <div class="notification-bell" id="notificationBell">
-              <span>🔔</span>
-              <span class="notification-badge" id="notificationCount">3</span>
-            </div>
-            <div class="notification-dropdown" id="notificationDropdown">
-              <div class="notification-header">
-                <h3>Notifications</h3>
-                <button class="mark-all-read">Mark all as read</button>
-              </div>
-              <div class="notification-list" id="notificationList">
-                <div class="notification-item unread">
-                  <div class="notification-icon assignment">📝</div>
-                  <div class="notification-content">
-                    <p>
-                      New assignment posted in
-                      <strong>Web Development Fundamentals</strong>
-                    </p>
-                    <span class="notification-time">2 hours ago</span>
-                  </div>
-                  <div class="notification-actions">
-                    <button class="notification-action">View</button>
-                  </div>
-                </div>
-                <div class="notification-item unread">
-                  <div class="notification-icon grade">📊</div>
-                  <div class="notification-content">
-                    <p>
-                      Your assignment <strong>Algorithm Analysis</strong> has
-                      been graded
-                    </p>
-                    <span class="notification-time">Yesterday</span>
-                  </div>
-                  <div class="notification-actions">
-                    <button class="notification-action">View</button>
-                  </div>
-                </div>
-                <div class="notification-item unread">
-                  <div class="notification-icon message">💬</div>
-                  <div class="notification-content">
-                    <p><strong>Dr. Alice Johnson</strong> sent you a message</p>
-                    <span class="notification-time">2 days ago</span>
-                  </div>
-                  <div class="notification-actions">
-                    <button class="notification-action">Reply</button>
-                  </div>
-                </div>
-                <div class="notification-item">
-                  <div class="notification-icon course">📚</div>
-                  <div class="notification-content">
-                    <p>
-                      You've completed <strong>JavaScript Basics</strong> lesson
-                    </p>
-                    <span class="notification-time">3 days ago</span>
-                  </div>
-                  <div class="notification-actions">
-                    <button class="notification-action">Continue</button>
-                  </div>
-                </div>
-              </div>
-              <div class="notification-footer">
-                <a href="#notifications" class="view-all-notifications"
-                  >View all notifications</a
-                >
-              </div>
+            <div class="notification-bell">🔔</div>
+
             </div>
           </div>
         </div>
@@ -356,6 +295,9 @@
           </div>
         </div>
       </section>
+
+
+      
 
       <!-- Settings Section -->
       <section id="settings-section" class="content-section">
@@ -784,5 +726,47 @@
     </main>
 
     <script src="scripts/student.js"></script>
+    <script src="scripts/notification.js"></script>
+    <script src="scripts/withdrawal.js"></script>
+    <script src="scripts/calendar.js"></script>
+
+
+    <script>
+      // Add this script to fix the overlapping day numbers
+document.addEventListener('DOMContentLoaded', function() {
+  // Function to fix streak calendar styling
+  function fixStreakCalendarStyling() {
+    // Get all day number elements
+    const dayNumbers = document.querySelectorAll('.day-number');
+    
+    // Add specific styling to each
+    dayNumbers.forEach(element => {
+      element.style.position = 'absolute';
+      element.style.top = '50%';
+      element.style.left = '50%';
+      element.style.transform = 'translate(-50%, -50%)';
+      element.style.zIndex = '1';
+      element.style.fontSize = '0.75rem';
+    });
+  }
+  
+  // Run initially and also when the dashboard is shown
+  fixStreakCalendarStyling();
+  
+  // Also run when the streak calendar might be updated
+  const observer = new MutationObserver(function(mutations) {
+    fixStreakCalendarStyling();
+  });
+  
+  // Start observing the streak calendar for changes
+  const streakCalendar = document.getElementById('streakCalendar');
+  if (streakCalendar) {
+    observer.observe(streakCalendar, { childList: true, subtree: true });
+  }
+});
+    </script>
+
+
+
   </body>
 </html>
