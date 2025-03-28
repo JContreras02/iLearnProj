@@ -5,7 +5,7 @@ const cors = require("cors");
 const bcrypt = require("bcrypt");
 const path = require("path");
 const jwt = require("jsonwebtoken");
-
+require('dotenv').config();
 
 const app = express();
 const port = 3000;
@@ -23,10 +23,10 @@ app.get("/instructor.html", (req, res) => {
 
 // MySQL Connection
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root", // Replace with your MySQL username
-  password: "Vanthang01", // Replace with your MySQL password
-  database: "ilearn", // Replace with your database name
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
 });
 
 db.connect((err) => {
@@ -37,7 +37,6 @@ db.connect((err) => {
   console.log("Connected to MySQL database");
 });
 
-require('dotenv').config();
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // Middleware to verify JWT token
@@ -917,3 +916,415 @@ app.get("/api/instructor/settings", verifyToken, isInstructor, (req, res) => {
     });
   });
 });
+
+
+
+
+
+app.get("/api/courses", (req, res) => {
+  // Query all published courses for the catalog
+  const getCoursesSql = `
+    SELECT 
+      c.course_id, c.title, c.description, c.category, c.price, c.thumbnail, c.level,
+      u.name as instructor_name,
+      COUNT(e.enrollment_id) as enrollment_count,
+      AVG(r.rating) as average_rating,
+      COUNT(r.review_id) as review_count
+    FROM courses c
+    JOIN users u ON c.user_id = u.id
+    LEFT JOIN enrollments e ON c.course_id = e.course_id
+    LEFT JOIN reviews r ON c.course_id = r.course_id
+    WHERE c.status = 'published'
+    GROUP BY c.course_id
+    ORDER BY c.created_at DESC
+  `;
+
+  db.query(getCoursesSql, (err, results) => {
+    if (err) {
+      console.error("Error fetching courses:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    // Format the courses for the response
+    const courses = {};
+    results.forEach(course => {
+      courses[course.course_id] = {
+        title: course.title,
+        description: course.description,
+        category: course.category,
+        level: course.level || "Beginner",
+        price: course.price,
+        instructor: course.instructor_name,
+        enrollments: course.enrollment_count,
+        rating: course.average_rating ? parseFloat(course.average_rating).toFixed(1) : "0.0",
+        reviews: course.review_count,
+        thumbnail: course.thumbnail || "/api/placeholder/400/200"
+      };
+    });
+
+    res.status(200).json({ courses });
+  });
+});
+
+// Enroll in a course
+app.post("/api/enrollments", verifyToken, (req, res) => {
+  const userId = req.userId;
+  const { courseId } = req.body;
+
+  // Validate input
+  if (!courseId) {
+    return res.status(400).json({ error: "Course ID is required" });
+  }
+
+  // Check if the course exists and is published
+  const checkCourseSql = "SELECT * FROM courses WHERE course_id = ? AND status = 'published'";
+  db.query(checkCourseSql, [courseId], (err, courseResults) => {
+    if (err) {
+      console.error("Error checking course:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    if (courseResults.length === 0) {
+      return res.status(404).json({ error: "Course not found or not published" });
+    }
+
+    // Check if already enrolled
+    const checkEnrollmentSql = "SELECT * FROM enrollments WHERE user_id = ? AND course_id = ?";
+    db.query(checkEnrollmentSql, [userId, courseId], (err, enrollmentResults) => {
+      if (err) {
+        console.error("Error checking enrollment:", err);
+        return res.status(500).json({ error: "Database error" });
+      }
+
+      if (enrollmentResults.length > 0) {
+        return res.status(400).json({ error: "Already enrolled in this course" });
+      }
+
+      // Create enrollment
+      const createEnrollmentSql = `
+        INSERT INTO enrollments (user_id, course_id, status, progress, enrollment_date)
+        VALUES (?, ?, 'active', 0, NOW())
+      `;
+      db.query(createEnrollmentSql, [userId, courseId], (err, result) => {
+        if (err) {
+          console.error("Error creating enrollment:", err);
+          return res.status(500).json({ error: "Database error" });
+        }
+
+        // Get the enrolled course details to return
+        const getCourseDetailsSql = `
+          SELECT c.*, u.name as instructor_name
+          FROM courses c
+          JOIN users u ON c.user_id = u.id
+          WHERE c.course_id = ?
+        `;
+        db.query(getCourseDetailsSql, [courseId], (err, courseDetailResults) => {
+          if (err) {
+            console.error("Error fetching course details:", err);
+            return res.status(500).json({ 
+              message: "Enrolled successfully, but failed to fetch course details" 
+            });
+          }
+
+          if (courseDetailResults.length === 0) {
+            return res.status(500).json({ 
+              message: "Enrolled successfully, but failed to fetch course details" 
+            });
+          }
+
+          const courseDetails = courseDetailResults[0];
+          res.status(201).json({
+            message: "Enrolled successfully",
+            enrollment: {
+              id: result.insertId,
+              courseId: courseId,
+              status: "active",
+              progress: 0,
+              enrollmentDate: new Date().toISOString()
+            },
+            course: {
+              id: courseDetails.course_id,
+              title: courseDetails.title,
+              instructor: courseDetails.instructor_name,
+              thumbnail: courseDetails.thumbnail || "/api/placeholder/400/200"
+            }
+          });
+        });
+      });
+    });
+  });
+});
+
+// Get enrolled courses for a student
+app.get("/api/user/courses", verifyToken, (req, res) => {
+  const userId = req.userId;
+
+  // Query enrolled courses with progress
+  const getEnrolledCoursesSql = `
+    SELECT 
+      c.course_id, c.title, c.description, c.category, c.thumbnail,
+      e.status as enrollment_status, e.progress, e.enrollment_date,
+      u.name as instructor_name,
+      (SELECT COUNT(*) FROM lessons WHERE course_id = c.course_id) as total_lessons,
+      (SELECT COUNT(*) FROM lesson_progress WHERE user_id = ? AND lesson_id IN 
+        (SELECT lesson_id FROM lessons WHERE course_id = c.course_id) AND completed = 1) as completed_lessons
+    FROM enrollments e
+    JOIN courses c ON e.course_id = c.course_id
+    JOIN users u ON c.user_id = u.id
+    WHERE e.user_id = ?
+    ORDER BY e.enrollment_date DESC
+  `;
+
+  db.query(getEnrolledCoursesSql, [userId, userId], (err, results) => {
+    if (err) {
+      console.error("Error fetching enrolled courses:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    // Format the courses for the response
+    const courses = {};
+    results.forEach(course => {
+      courses[course.course_id] = {
+        name: course.title,
+        description: course.description,
+        category: course.category,
+        imageUrl: course.thumbnail || "/api/placeholder/400/200",
+        status: course.enrollment_status,
+        progress: course.progress,
+        enrollDate: course.enrollment_date,
+        instructor: course.instructor_name,
+        totalLessons: course.total_lessons || 0,
+        completedLessons: course.completed_lessons || 0
+      };
+    });
+
+    res.status(200).json({ courses });
+  });
+});
+
+// Get instructor courses with more details for the instructor dashboard
+app.get("/api/instructor/courses", verifyToken, isInstructor, (req, res) => {
+  const userId = req.userId;
+
+  // Query instructor courses with enrollments, ratings, and revenue data
+  const getInstructorCoursesSql = `
+    SELECT 
+      c.course_id, c.title, c.description, c.category, c.price, c.status, c.thumbnail,
+      COUNT(e.enrollment_id) as enrollments,
+      AVG(r.rating) as rating,
+      COUNT(r.review_id) as reviews,
+      SUM(p.amount) as revenue
+    FROM courses c
+    LEFT JOIN enrollments e ON c.course_id = e.course_id
+    LEFT JOIN reviews r ON c.course_id = r.course_id
+    LEFT JOIN payments p ON e.enrollment_id = p.enrollment_id
+    WHERE c.user_id = ?
+    GROUP BY c.course_id
+    ORDER BY c.created_at DESC
+  `;
+
+  db.query(getInstructorCoursesSql, [userId], (err, results) => {
+    if (err) {
+      console.error("Error fetching instructor courses:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    // Format the courses for the response
+    const courses = {};
+    results.forEach(course => {
+      courses[course.course_id] = {
+        title: course.title,
+        description: course.description,
+        category: course.category,
+        price: course.price,
+        status: course.status,
+        thumbnail: course.thumbnail || "/api/placeholder/300/200",
+        enrollments: course.enrollments || 0,
+        rating: course.rating ? parseFloat(course.rating).toFixed(1) : "0.0",
+        reviews: course.reviews || 0,
+        revenue: course.revenue || 0
+      };
+    });
+
+    res.status(200).json({ courses });
+  });
+});
+
+// Update course status (publish/unpublish)
+app.put("/api/courses/:courseId/status", verifyToken, isInstructor, (req, res) => {
+  const courseId = req.params.courseId;
+  const userId = req.userId;
+  const { status } = req.body;
+
+  // Validate input
+  if (!status || !['draft', 'published', 'archived'].includes(status)) {
+    return res.status(400).json({ error: "Valid status is required" });
+  }
+
+  // Verify course ownership
+  const checkOwnershipSql = "SELECT * FROM courses WHERE course_id = ? AND user_id = ?";
+  db.query(checkOwnershipSql, [courseId, userId], (err, results) => {
+    if (err) {
+      console.error("Error checking course ownership:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Course not found or unauthorized" });
+    }
+
+    // Check if all required fields are filled before publishing
+    if (status === 'published') {
+      const course = results[0];
+      if (!course.title || !course.description || !course.category || !course.price) {
+        return res.status(400).json({ 
+          error: "Cannot publish course: title, description, category, and price are required" 
+        });
+      }
+    }
+
+    // Update course status
+    const updateStatusSql = "UPDATE courses SET status = ? WHERE course_id = ?";
+    db.query(updateStatusSql, [status, courseId], (err, result) => {
+      if (err) {
+        console.error("Error updating course status:", err);
+        return res.status(500).json({ error: "Database error" });
+      }
+
+      res.status(200).json({
+        message: `Course ${status === 'published' ? 'published' : status === 'archived' ? 'archived' : 'saved as draft'} successfully`,
+        courseId,
+        status
+      });
+    });
+  });
+});
+
+// Setup database tables if they don't exist
+function setupDatabase() {
+  // Create courses table
+  const createCoursesTable = `
+    CREATE TABLE IF NOT EXISTS courses (
+      course_id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      title VARCHAR(255) NOT NULL,
+      description TEXT,
+      category VARCHAR(50),
+      price DECIMAL(10, 2) DEFAULT 0,
+      status ENUM('draft', 'published', 'archived') DEFAULT 'draft',
+      thumbnail VARCHAR(255),
+      level VARCHAR(50) DEFAULT 'Beginner',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  `;
+
+  // Create enrollments table
+  const createEnrollmentsTable = `
+    CREATE TABLE IF NOT EXISTS enrollments (
+      enrollment_id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      course_id INT NOT NULL,
+      status ENUM('active', 'completed', 'dropped') DEFAULT 'active',
+      progress INT DEFAULT 0,
+      enrollment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      completion_date TIMESTAMP NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id),
+      FOREIGN KEY (course_id) REFERENCES courses(course_id),
+      UNIQUE KEY (user_id, course_id)
+    )
+  `;
+
+  // Create lessons table
+  const createLessonsTable = `
+    CREATE TABLE IF NOT EXISTS lessons (
+      lesson_id INT AUTO_INCREMENT PRIMARY KEY,
+      course_id INT NOT NULL,
+      title VARCHAR(255) NOT NULL,
+      content TEXT,
+      order_index INT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (course_id) REFERENCES courses(course_id)
+    )
+  `;
+
+  // Create lesson progress table
+  const createLessonProgressTable = `
+    CREATE TABLE IF NOT EXISTS lesson_progress (
+      progress_id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      lesson_id INT NOT NULL,
+      completed BOOLEAN DEFAULT FALSE,
+      last_accessed TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id),
+      FOREIGN KEY (lesson_id) REFERENCES lessons(lesson_id),
+      UNIQUE KEY (user_id, lesson_id)
+    )
+  `;
+
+  // Create reviews table
+  const createReviewsTable = `
+    CREATE TABLE IF NOT EXISTS reviews (
+      review_id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      course_id INT NOT NULL,
+      rating INT NOT NULL,
+      comment TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id),
+      FOREIGN KEY (course_id) REFERENCES courses(course_id),
+      UNIQUE KEY (user_id, course_id)
+    )
+  `;
+
+  // Create payments table
+  const createPaymentsTable = `
+    CREATE TABLE IF NOT EXISTS payments (
+      payment_id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NOT NULL,
+      enrollment_id INT NOT NULL,
+      amount DECIMAL(10, 2) NOT NULL,
+      payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      payment_method VARCHAR(50),
+      transaction_id VARCHAR(100),
+      status ENUM('pending', 'completed', 'failed', 'refunded') DEFAULT 'pending',
+      FOREIGN KEY (user_id) REFERENCES users(id),
+      FOREIGN KEY (enrollment_id) REFERENCES enrollments(enrollment_id)
+    )
+  `;
+
+  // Execute the queries
+  db.query(createCoursesTable, err => {
+    if (err) console.error("Error creating courses table:", err);
+    else console.log("Courses table ready");
+  });
+
+  db.query(createEnrollmentsTable, err => {
+    if (err) console.error("Error creating enrollments table:", err);
+    else console.log("Enrollments table ready");
+  });
+
+  db.query(createLessonsTable, err => {
+    if (err) console.error("Error creating lessons table:", err);
+    else console.log("Lessons table ready");
+  });
+
+  db.query(createLessonProgressTable, err => {
+    if (err) console.error("Error creating lesson progress table:", err);
+    else console.log("Lesson progress table ready");
+  });
+
+  db.query(createReviewsTable, err => {
+    if (err) console.error("Error creating reviews table:", err);
+    else console.log("Reviews table ready");
+  });
+
+  db.query(createPaymentsTable, err => {
+    if (err) console.error("Error creating payments table:", err);
+    else console.log("Payments table ready");
+  });
+}
+
+// Call setupDatabase function when the server starts
+setupDatabase();
