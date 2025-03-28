@@ -2392,3 +2392,440 @@ function setupSettingsPanels() {
 }
 
 
+
+
+async function createCourse(courseData) {
+  try {
+    // Show loading state
+    const submitButton = document.querySelector('#createCourseForm button[type="submit"]');
+    const originalButtonText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.textContent = 'Creating Course...';
+    
+    // Get the JWT token
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('You must be logged in to create a course');
+    }
+    
+    // Send API request to create course
+    const response = await fetch('http://localhost:3000/api/courses', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token
+      },
+      body: JSON.stringify(courseData)
+    });
+    
+    // Parse response
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to create course');
+    }
+    
+    const data = await response.json();
+    
+    // Reset form
+    document.getElementById('createCourseForm').reset();
+    
+    // Show success message
+    showNotification('success', `Course "${courseData.title}" created successfully`);
+    
+    // Refresh course list
+    await loadInstructorCourses();
+    
+    // Return the created course data
+    return data.course;
+  } catch (error) {
+    console.error('Error creating course:', error);
+    showNotification('error', error.message || 'Failed to create course');
+    return null;
+  } finally {
+    // Reset button state
+    const submitButton = document.querySelector('#createCourseForm button[type="submit"]');
+    submitButton.disabled = false;
+    submitButton.textContent = 'Create Course';
+  }
+}
+
+// This function loads the instructor's courses
+async function loadInstructorCourses() {
+  try {
+    // Show loading state
+    const coursesList = document.getElementById('coursesList');
+    if (coursesList) {
+      coursesList.innerHTML = '<div class="loading-indicator">Loading courses...</div>';
+    }
+    
+    // Get the JWT token
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('You must be logged in to view your courses');
+    }
+    
+    // Fetch courses from API
+    let courses;
+    
+    try {
+      const response = await fetch('http://localhost:3000/api/instructor/courses', {
+        method: 'GET',
+        headers: {
+          'Authorization': token
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch courses');
+      }
+      
+      const data = await response.json();
+      courses = data.courses;
+    } catch (apiError) {
+      console.warn('API error, using mock data:', apiError);
+      // Fall back to localStorage if API fails
+      courses = JSON.parse(localStorage.getItem('instructorCourses')) || {};
+    }
+    
+    // Update UI with courses
+    updateCoursesUI(courses);
+    
+    return courses;
+  } catch (error) {
+    console.error('Error loading courses:', error);
+    showNotification('error', error.message || 'Failed to load courses');
+    
+    // Show error state in the UI
+    const coursesList = document.getElementById('coursesList');
+    if (coursesList) {
+      coursesList.innerHTML = `<div class="error-state">
+        <p>Error loading courses: ${error.message}</p>
+        <button onclick="loadInstructorCourses()">Try Again</button>
+      </div>`;
+    }
+    
+    return {};
+  }
+}
+
+// This function updates the UI with the instructor's courses
+function updateCoursesUI(courses) {
+  const coursesList = document.getElementById('coursesList');
+  if (!coursesList) return;
+  
+  // Clear the courses list
+  coursesList.innerHTML = '';
+  
+  // Check if there are any courses
+  if (!courses || Object.keys(courses).length === 0) {
+    coursesList.innerHTML = `<div class="empty-state">
+      <h3>No courses yet</h3>
+      <p>Create your first course to get started</p>
+      <button class="create-course-btn" onclick="openCreateCourseModal()">+ Create Course</button>
+    </div>`;
+    return;
+  }
+  
+  // Add each course to the list
+  Object.entries(courses).forEach(([courseId, course]) => {
+    const courseElement = document.createElement('div');
+    courseElement.className = 'course-item';
+    courseElement.setAttribute('data-id', courseId);
+    
+    courseElement.innerHTML = `
+      <div class="course-header">
+        <img src="${course.thumbnail || '/api/placeholder/300/200'}" alt="${course.title}" class="course-thumbnail">
+        <div class="course-status ${course.status.toLowerCase()}">${course.status}</div>
+      </div>
+      <div class="course-details">
+        <h3 class="course-title">${course.title}</h3>
+        <p class="course-description">${course.description || 'No description'}</p>
+        <div class="course-stats">
+          <div class="stat">
+            <span class="stat-value">${course.enrollments || 0}</span>
+            <span class="stat-label">Students</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">${course.rating || 0}</span>
+            <span class="stat-label">Rating</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">${course.revenue ? '$' + course.revenue.toFixed(2) : '$0.00'}</span>
+            <span class="stat-label">Revenue</span>
+          </div>
+        </div>
+        <div class="course-actions">
+          <button class="edit-btn" onclick="editCourse('${courseId}')">Edit</button>
+          <button class="view-btn" onclick="viewCourse('${courseId}')">View</button>
+          ${course.status === 'draft' ? `<button class="publish-btn" onclick="publishCourse('${courseId}')">Publish</button>` : ''}
+        </div>
+      </div>
+    `;
+    
+    coursesList.appendChild(courseElement);
+  });
+}
+
+// This function opens the create course modal
+function openCreateCourseModal() {
+  // Find or create modal
+  let modal = document.getElementById('createCourseModal');
+  
+  if (!modal) {
+    // Create modal if it doesn't exist
+    modal = document.createElement('div');
+    modal.id = 'createCourseModal';
+    modal.className = 'modal';
+    
+    modal.innerHTML = `
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Create New Course</h2>
+          <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="createCourseForm">
+            <div class="form-group">
+              <label for="courseTitle">Course Title</label>
+              <input type="text" id="courseTitle" name="title" required>
+            </div>
+            <div class="form-group">
+              <label for="courseDescription">Description</label>
+              <textarea id="courseDescription" name="description" rows="4" required></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="courseCategory">Category</label>
+                <select id="courseCategory" name="category" required>
+                  <option value="">Select Category</option>
+                  <option value="Web Development">Web Development</option>
+                  <option value="Data Science">Data Science</option>
+                  <option value="Design">Design</option>
+                  <option value="Business">Business</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="courseLevel">Level</label>
+                <select id="courseLevel" name="level" required>
+                  <option value="">Select Level</option>
+                  <option value="Beginner">Beginner</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Advanced">Advanced</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="coursePrice">Price ($)</label>
+                <input type="number" id="coursePrice" name="price" min="0" step="0.01" required>
+              </div>
+              <div class="form-group">
+                <label for="courseThumbnail">Thumbnail URL</label>
+                <input type="text" id="courseThumbnail" name="thumbnail" placeholder="Leave blank for default">
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn-secondary cancel-btn">Cancel</button>
+              <button type="submit" class="btn-primary">Create Course</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Add event listeners to the modal
+    modal.querySelector('.close-modal').addEventListener('click', closeCreateCourseModal);
+    modal.querySelector('.cancel-btn').addEventListener('click', closeCreateCourseModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeCreateCourseModal();
+    });
+    
+    // Add submit handler to the form
+    document.getElementById('createCourseForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      // Get form data
+      const formData = new FormData(e.target);
+      const courseData = {
+        title: formData.get('title'),
+        description: formData.get('description'),
+        category: formData.get('category'),
+        level: formData.get('level'),
+        price: parseFloat(formData.get('price')),
+        thumbnail: formData.get('thumbnail') || null,
+        status: 'draft'
+      };
+      
+      // Create the course
+      const createdCourse = await createCourse(courseData);
+      
+      if (createdCourse) {
+        // Store in localStorage as fallback
+        const instructorCourses = JSON.parse(localStorage.getItem('instructorCourses')) || {};
+        const newCourseId = `c${Date.now()}`;
+        instructorCourses[newCourseId] = {
+          ...courseData,
+          enrollments: 0,
+          rating: 0,
+          reviews: 0,
+          revenue: 0
+        };
+        localStorage.setItem('instructorCourses', JSON.stringify(instructorCourses));
+        
+        // Close the modal
+        closeCreateCourseModal();
+      }
+    });
+  }
+  
+  // Show the modal
+  modal.style.display = 'block';
+}
+
+// This function closes the create course modal
+function closeCreateCourseModal() {
+  const modal = document.getElementById('createCourseModal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+// This function handles editing a course
+function editCourse(courseId) {
+  // Implementation similar to createCourse but pre-populates form with existing data
+  alert(`Edit course: ${courseId}`);
+  // In a real implementation, you would:
+  // 1. Fetch the course data
+  // 2. Open a modal with the form pre-populated
+  // 3. Handle form submission to update the course
+}
+
+// This function handles viewing a course
+function viewCourse(courseId) {
+  // Navigate to the course details page
+  window.location.href = `course-details.html?id=${courseId}`;
+}
+
+// This function handles publishing a course
+async function publishCourse(courseId) {
+  try {
+    // Show confirmation
+    if (!confirm('Are you sure you want to publish this course?')) {
+      return;
+    }
+    
+    // Get the JWT token
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('You must be logged in to publish a course');
+    }
+    
+    // Send API request to update course status
+    const response = await fetch(`http://localhost:3000/api/courses/${courseId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token
+      },
+      body: JSON.stringify({ status: 'published' })
+    });
+    
+    // Parse response
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to publish course');
+    }
+    
+    // Update course status in UI
+    const courseElement = document.querySelector(`.course-item[data-id="${courseId}"]`);
+    if (courseElement) {
+      const statusElement = courseElement.querySelector('.course-status');
+      statusElement.textContent = 'Published';
+      statusElement.className = 'course-status published';
+      
+      // Remove publish button
+      const publishButton = courseElement.querySelector('.publish-btn');
+      if (publishButton) {
+        publishButton.remove();
+      }
+    }
+    
+    // Update localStorage for fallback
+    const instructorCourses = JSON.parse(localStorage.getItem('instructorCourses')) || {};
+    if (instructorCourses[courseId]) {
+      instructorCourses[courseId].status = 'published';
+      localStorage.setItem('instructorCourses', JSON.stringify(instructorCourses));
+    }
+    
+    // Show success message
+    showNotification('success', 'Course published successfully');
+  } catch (error) {
+    console.error('Error publishing course:', error);
+    showNotification('error', error.message || 'Failed to publish course');
+  }
+}
+
+// This function shows a notification
+function showNotification(type, message) {
+  // Create notification element
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  notification.textContent = message;
+  
+  // Add to the DOM
+  const notificationContainer = document.querySelector('.notification-container');
+  if (!notificationContainer) {
+    // Create container if it doesn't exist
+    const container = document.createElement('div');
+    container.className = 'notification-container';
+    document.body.appendChild(container);
+    container.appendChild(notification);
+  } else {
+    notificationContainer.appendChild(notification);
+  }
+  
+  // Remove after 5 seconds
+  setTimeout(() => {
+    notification.classList.add('fade-out');
+    setTimeout(() => {
+      notification.remove();
+    }, 500);
+  }, 5000);
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  // Check if this is the instructor page
+  const isInstructorPage = document.getElementById('instructorDashboard') || 
+                          document.querySelector('.instructor-dashboard');
+  
+  if (isInstructorPage) {
+    // Load instructor courses
+    loadInstructorCourses();
+    
+    // Add create course button if it doesn't exist
+    const createCourseBtn = document.querySelector('.create-course-btn');
+    if (!createCourseBtn) {
+      const headerActions = document.querySelector('.dashboard-header');
+      if (headerActions) {
+        const createButton = document.createElement('button');
+        createButton.className = 'create-course-btn';
+        createButton.textContent = '+ Create Course';
+        createButton.addEventListener('click', openCreateCourseModal);
+        headerActions.appendChild(createButton);
+      }
+    }
+    
+    // Add notification container if it doesn't exist
+    if (!document.querySelector('.notification-container')) {
+      const container = document.createElement('div');
+      container.className = 'notification-container';
+      document.body.appendChild(container);
+    }
+  }
+});
+
+
+
