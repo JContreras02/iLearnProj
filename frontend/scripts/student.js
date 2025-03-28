@@ -1590,3 +1590,611 @@ function setupSettingsPanels() {
         });
     });
 }
+
+
+
+function updateMyCourses(userData) {
+    // Get course progress list element
+    const courseProgressList = document.getElementById('courseProgressList');
+    const courseGrid = document.getElementById('courseGrid');
+    
+    if (!courseProgressList || !courseGrid) {
+        console.error('Course elements not found in the DOM');
+        return;
+    }
+    
+    // Check if we have enrolled courses data
+    if (!userData.courses || Object.keys(userData.courses).length === 0) {
+        // Try to get courses from localStorage (fallback)
+        const localCourses = JSON.parse(localStorage.getItem('enrolledCourses')) || [];
+        
+        if (localCourses.length === 0) {
+            // No courses found in either source
+            courseProgressList.innerHTML = '<div class="empty-state">No active courses. <a href="courses.html">Browse courses</a></div>';
+            courseGrid.innerHTML = '<div class="empty-state">No courses enrolled yet. <a href="courses.html">Browse courses</a></div>';
+            return;
+        }
+        
+        // Convert localStorage courses to the expected format
+        const formattedCourses = {};
+        localCourses.forEach(course => {
+            formattedCourses[course.id] = {
+                name: course.title,
+                progress: course.progress || 0,
+                status: 'active',
+                enrollDate: course.enrollDate || new Date().toISOString(),
+                completedLessons: 0,
+                totalLessons: 10, // Default placeholder
+                instructor: 'Instructor', // Default placeholder
+                imageUrl: '/api/placeholder/400/200'
+            };
+        });
+        
+        // Update the user data
+        userData.courses = formattedCourses;
+    }
+    
+    // Update course progress in dashboard
+    updateCourseProgress(userData.courses);
+    
+    // Update courses section
+    updateCourses(userData.courses);
+}
+
+// Modify the existing initializeDashboard function to call our new function
+const originalInitializeDashboard = initializeDashboard;
+
+initializeDashboard = async function() {
+    if (!verifyToken()) {
+        return; // Exit if no valid token
+    }
+    
+    try {
+        // Show loading state if you have a loading element
+        
+        // Try to fetch user data from the backend
+        let userData;
+        
+        try {
+            const response = await fetch('http://localhost:3000/api/user', {
+                method: 'GET',
+                headers: {
+                    'Authorization': localStorage.getItem('token'),
+                },
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch user data');
+            }
+            
+            userData = await response.json();
+        } catch (error) {
+            console.error("Error fetching user data from API:", error);
+            
+            // Fall back to basic user data from localStorage
+            userData = {
+                name: localStorage.getItem('userName') || 'Student',
+                email: localStorage.getItem('userEmail') || 'student@example.com'
+            };
+            
+            // Try to get enrolled courses from localStorage
+            const enrolledCourses = JSON.parse(localStorage.getItem('enrolledCourses')) || [];
+            
+            // Format courses for dashboard
+            if (enrolledCourses.length > 0) {
+                userData.courses = {};
+                enrolledCourses.forEach(course => {
+                    userData.courses[course.id] = {
+                        name: course.title,
+                        status: 'active',
+                        progress: course.progress || 0
+                    };
+                });
+            }
+        }
+        
+        console.log("User data:", userData);
+        
+        // Update user profile info in sidebar
+        document.getElementById('userName').textContent = userData.name || 'Student';
+        document.getElementById('userEmail').textContent = userData.email || '';
+        document.getElementById('welcomeMessage').textContent = `Welcome back, ${userData.name || 'Student'}! 👋`;
+        
+        // Calculate and update stats
+        const stats = calculateUserStats(userData);
+        updateStats(stats);
+        
+        // Update the rest of the dashboard
+        try {
+            updateDashboard(userData);
+            updateMyCourses(userData);
+            updateAssignments(userData.assignments);
+            updateGrades(userData.grades, userData.courses);
+            updateCalendar(userData.events);
+            updateMessages(userData.messages);
+            updateSettings(userData);
+            
+            initializeNotifications();
+            
+            // Add event listeners to notification bells
+            document.querySelectorAll('.notification-bell').forEach(bell => {
+                bell.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    showNotificationPanel(this);
+                });
+            });
+        } catch (e) {
+            console.error("Error updating dashboard sections:", e);
+        }
+    } catch (error) {
+        console.error("Error initializing dashboard:", error);
+        alert(`Error loading dashboard: ${error.message}. Please try again or contact support.`);
+    }
+};
+
+// Add enrollment functionality to course cards in the student dashboard
+function setupCourseActions() {
+    // Get all course action buttons
+    const actionButtons = document.querySelectorAll('.course-actions .action-btn');
+    
+    actionButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            const courseCard = this.closest('.course-card');
+            const courseId = courseCard.getAttribute('data-id');
+            const courseName = courseCard.querySelector('.course-title').textContent;
+            
+            if (this.textContent.includes('Continue')) {
+                // Handle continue learning
+                alert(`Opening course content for: ${courseName}`);
+                // Here you would navigate to the course content page
+                // window.location.href = `course-content.html?id=${courseId}`;
+            } else if (this.textContent.includes('Materials')) {
+                // Handle view materials
+                alert(`Opening course materials for: ${courseName}`);
+                // Here you would navigate to the course materials page
+                // window.location.href = `course-materials.html?id=${courseId}`;
+            }
+        });
+    });
+}
+
+// Override the updateCourses function to include data-id and event listeners
+function updateCourses(courses) {
+    const courseGrid = document.getElementById('courseGrid');
+    courseGrid.innerHTML = '';
+
+    if (!courses || Object.keys(courses).length === 0) {
+        courseGrid.innerHTML = '<div class="empty-state">No courses enrolled yet. <a href="courses.html">Browse courses</a></div>';
+        return;
+    }
+
+    Object.entries(courses).forEach(([courseId, course]) => {
+        const courseElement = document.createElement('div');
+        courseElement.className = 'course-card';
+        courseElement.setAttribute('data-id', courseId);
+        
+        courseElement.innerHTML = `
+            <div class="course-header">
+                <img src="${course.imageUrl || '/api/placeholder/400/200'}" alt="${course.name}" class="course-image">
+                <span class="course-status ${course.status}">${course.status}</span>
+            </div>
+            <div class="course-content">
+                <h3 class="course-title">${course.name}</h3>
+                <p class="course-instructor">By ${course.instructor || 'Instructor'}</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${course.progress}%"></div>
+                </div>
+                <div class="progress-info">
+                    <span>${course.progress}% Complete</span>
+                    <span>${course.completedLessons || 0}/${course.totalLessons || 0} Lessons</span>
+                </div>
+                <div class="course-actions">
+                    <button class="action-btn primary">Continue Learning</button>
+                    <button class="action-btn secondary">View Materials</button>
+                </div>
+            </div>
+        `;
+        courseGrid.appendChild(courseElement);
+    });
+    
+    // Set up course action buttons
+    setupCourseActions();
+}
+
+// Add a function to listen for when the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if user is on the student dashboard page
+    const isDashboardPage = document.querySelector('.sidebar') && 
+                           document.getElementById('dashboard-section');
+    
+    if (isDashboardPage) {
+        console.log('Student dashboard detected, initializing...');
+        initializeDashboard();
+    }
+    
+    // Add logout functionality
+    const signoutBtn = document.querySelector('.signout-btn');
+    if (signoutBtn) {
+        signoutBtn.addEventListener('click', function() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userName');
+            localStorage.removeItem('userEmail');
+            window.location.href = 'signin.html';
+        });
+    }
+});
+
+
+
+// Course section filter
+document.addEventListener('DOMContentLoaded', function() {
+    // Get all course filter buttons
+    const courseFilterButtons = document.querySelectorAll('#courses-section .filter-btn');
+    
+    // Add click event listener to each button
+    courseFilterButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        // Remove 'active' class from all buttons
+        courseFilterButtons.forEach(btn => {
+          btn.classList.remove('active');
+        });
+        
+        // Add 'active' class to clicked button
+        this.classList.add('active');
+        
+        // Get the filter type from button text
+        const filterType = this.textContent.trim().toLowerCase();
+        
+        // Filter the courses based on button clicked
+        filterCourses(filterType);
+      });
+    })});
+
+    // Function to filter courses
+function filterCourses(filterType) {
+    // Get all course cards
+    const courseCards = document.querySelectorAll('#courseGrid .course-card');
+    
+    // Show/hide courses based on filter type
+    courseCards.forEach(card => {
+      // Get course status from the card
+      const courseStatus = card.querySelector('.course-status')?.textContent.toLowerCase() || '';
+      
+      if (filterType === 'all courses') {
+        // Show all courses
+        card.style.display = 'flex';
+      } else if (filterType === 'in progress' && (courseStatus.includes('progress') || courseStatus.includes('active'))) {
+        // Show courses with status "in progress" OR "active"
+        card.style.display = 'flex';
+      } else if (filterType === 'completed' && courseStatus.includes('completed')) {
+        // Show only completed courses
+        card.style.display = 'flex';
+      } else {
+        // Hide courses that don't match the filter
+        card.style.display = 'none';
+      }
+    });
+    
+    // Update course count display if you have one
+    const visibleCourses = document.querySelectorAll('#courseGrid .course-card[style="display: flex;"]').length;
+    const courseCountElement = document.querySelector('.courses-count');
+    if (courseCountElement) {
+      courseCountElement.textContent = `Showing ${visibleCourses} courses`;
+    }
+  }
+
+
+
+  
+
+
+
+
+
+  // Function to update dashboard stats
+function updateDashboardStats() {
+    console.log("Updating dashboard stats...");
+    
+    // Get enrolled courses from localStorage
+    const enrolledCourses = JSON.parse(localStorage.getItem('enrolledCourses')) || [];
+    console.log("Enrolled courses from localStorage:", enrolledCourses);
+    
+    // Calculate stats
+    const activeCourses = enrolledCourses.length;
+    const pendingAssignments = 0; // You can update this based on actual assignments data
+    const averageGrade = "N/A"; // Replace with actual grade calculation if available
+    const certificatesEarned = enrolledCourses.filter(course => course.status === 'completed').length;
+    
+    console.log("Stats calculated:", {
+      activeCourses,
+      pendingAssignments,
+      averageGrade,
+      certificatesEarned
+    });
+    
+    // Update stats in the UI
+    updateStatValue("activeCourses", activeCourses);
+    updateStatValue("pendingAssignments", pendingAssignments);
+    updateStatValue("averageGrade", averageGrade);
+    updateStatValue("certificatesEarned", certificatesEarned);
+    
+    // Also update stats grid if it exists
+    const statsGrid = document.getElementById('statsGrid');
+    if (statsGrid) {
+      statsGrid.innerHTML = `
+        <div class="stat-card">
+          <div class="stat-icon courses">📚</div>
+          <div class="stat-data">
+            <span class="stat-value" id="activeCourses">${activeCourses}</span>
+            <span class="stat-label">Active Courses</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon assignments">📝</div>
+          <div class="stat-data">
+            <span class="stat-value" id="pendingAssignments">${pendingAssignments}</span>
+            <span class="stat-label">Pending Assignments</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon grades">📊</div>
+          <div class="stat-data">
+            <span class="stat-value" id="averageGrade">${averageGrade}</span>
+            <span class="stat-label">Average Grade</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon certificates">🏆</div>
+          <div class="stat-data">
+            <span class="stat-value" id="certificatesEarned">${certificatesEarned}</span>
+            <span class="stat-label">Certificates Earned</span>
+          </div>
+        </div>
+      `;
+    }
+  }
+  
+  // Helper function to update stat value in the UI
+  function updateStatValue(statId, value) {
+    // Try different selectors to find the element
+    const selectors = [
+      `#${statId}`,
+      `[data-stat="${statId}"]`,
+      `.stat-value#${statId}`,
+      `.${statId}`
+    ];
+    
+    let element = null;
+    
+    // Try each selector
+    for (const selector of selectors) {
+      element = document.querySelector(selector);
+      if (element) break;
+    }
+    
+    // If we found the element, update it
+    if (element) {
+      console.log(`Updating ${statId} to ${value}`);
+      element.textContent = value;
+      return true;
+    }
+    
+    // If we couldn't find the element by ID/class, try finding it by content/context
+    if (statId === "activeCourses") {
+      // Find elements that might be the active courses count
+      const elements = document.querySelectorAll('span, div');
+      for (const el of elements) {
+        // Check if this element contains just a number and is followed by text about "Active Courses"
+        if (/^\s*\d+\s*$/.test(el.textContent) && 
+            el.nextElementSibling && 
+            el.nextElementSibling.textContent.includes("Active Course")) {
+          console.log("Found active courses element by context:", el);
+          el.textContent = value;
+          return true;
+        }
+      }
+    }
+    
+    console.log(`Could not find element for ${statId}`);
+    return false;
+  }
+  
+  // Course enrollment function
+  function enrollCourse(courseId, courseTitle) {
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      // Save intended course enrollment for after login
+      localStorage.setItem('enrollAfterLogin', JSON.stringify({ id: courseId, title: courseTitle }));
+      
+      // Redirect to login page
+      alert('Please log in to enroll in courses');
+      window.location.href = 'signin.html?redirect=courses.html';
+      return;
+    }
+    
+    // User is logged in, handle enrollment
+    try {
+      // Try to enroll via API first
+      enrollViaApi(courseId, courseTitle)
+        .then(success => {
+          if (!success) {
+            // Fall back to localStorage if API fails
+            enrollViaLocalStorage(courseId, courseTitle);
+          }
+        })
+        .catch(error => {
+          console.error("API enrollment error:", error);
+          // Fall back to localStorage
+          enrollViaLocalStorage(courseId, courseTitle);
+        });
+    } catch (error) {
+      console.error('Enrollment error:', error);
+      alert('Unable to enroll. Please try again.');
+    }
+  }
+  
+  // Helper function for API enrollment
+  async function enrollViaApi(courseId, courseTitle) {
+    try {
+      const response = await fetch('http://localhost:3000/api/enrollments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token')
+        },
+        body: JSON.stringify({ courseId })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log("API enrollment successful:", data);
+        
+        // Also save to localStorage for redundancy
+        saveEnrollmentToLocalStorage(courseId, courseTitle);
+        
+        alert(`Successfully enrolled in: ${courseTitle}`);
+        window.location.href = 'student.html';
+        return true;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      console.error("API enrollment failed:", error);
+      return false;
+    }
+  }
+  
+  // Helper function for localStorage enrollment
+  function enrollViaLocalStorage(courseId, courseTitle) {
+    // Check if already enrolled
+    let enrolledCourses = JSON.parse(localStorage.getItem('enrolledCourses')) || [];
+    
+    if (enrolledCourses.some(course => course.id === courseId)) {
+      alert(`You are already enrolled in: ${courseTitle}`);
+      return;
+    }
+    
+    // Save enrollment
+    saveEnrollmentToLocalStorage(courseId, courseTitle);
+    
+    alert(`Successfully enrolled in: ${courseTitle}`);
+    window.location.href = 'student.html';
+  }
+  
+  // Helper function to save enrollment to localStorage
+  function saveEnrollmentToLocalStorage(courseId, courseTitle) {
+    let enrolledCourses = JSON.parse(localStorage.getItem('enrolledCourses')) || [];
+    
+    // Add to enrolled courses
+    const newEnrollment = { 
+      id: courseId, 
+      title: courseTitle,
+      status: 'active',
+      enrollDate: new Date().toISOString(),
+      progress: 0
+    };
+    
+    enrolledCourses.push(newEnrollment);
+    
+    // Save to localStorage
+    localStorage.setItem('enrolledCourses', JSON.stringify(enrolledCourses));
+    console.log("Course saved to localStorage:", newEnrollment);
+    console.log("Current enrolled courses:", enrolledCourses);
+    
+    // Update dashboard stats if we're on the dashboard page
+    if (document.getElementById('statsGrid') || document.getElementById('activeCourses')) {
+      updateDashboardStats();
+    }
+  }
+  
+  // Add this code to update stats when the page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM loaded, checking for enrolled courses");
+    
+    // Wait a bit to ensure other scripts have loaded
+    setTimeout(updateDashboardStats, 500);
+  });
+
+
+
+
+
+
+
+
+
+  document.addEventListener('DOMContentLoaded', function() {
+    // Get all assignment filter buttons
+    const assignmentFilterButtons = document.querySelectorAll('#assignments-section .filter-btn');
+    
+    // Add click event listener to each button
+    assignmentFilterButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        // Remove 'active' class from all buttons
+        assignmentFilterButtons.forEach(btn => {
+          btn.classList.remove('active');
+        });
+        
+        // Add 'active' class to clicked button
+        this.classList.add('active');
+        
+        // Get the filter type from button text
+        const filterType = this.textContent.trim().toLowerCase();
+        
+        // Filter the assignments based on button clicked
+        filterAssignments(filterType);
+      });
+    });
+    
+    // Function to filter assignments
+    function filterAssignments(filterType) {
+      // Get all assignment items
+      const assignmentItems = document.querySelectorAll('#assignmentList .assignment-card');
+      
+      // Show/hide assignments based on filter type
+      assignmentItems.forEach(item => {
+        // Get assignment status from the item
+        const assignmentStatus = item.querySelector('.assignment-status')?.textContent.toLowerCase() || '';
+        
+        if (filterType === 'all') {
+          // Show all assignments
+          item.style.display = 'flex';
+        } else if (filterType === 'pending' && assignmentStatus.includes('pending')) {
+          // Show only pending assignments
+          item.style.display = 'flex';
+        } else if (filterType === 'submitted' && assignmentStatus.includes('submitted')) {
+          // Show only submitted assignments
+          item.style.display = 'flex';
+        } else if (filterType === 'graded' && assignmentStatus.includes('graded')) {
+          // Show only graded assignments
+          item.style.display = 'flex';
+        } else {
+          // Hide assignments that don't match the filter
+          item.style.display = 'none';
+        }
+      });
+      
+      // Show empty state if no assignments match the filter
+      const visibleAssignments = document.querySelectorAll('#assignmentList .assignment-card[style="display: flex;"]');
+      
+      if (visibleAssignments.length === 0) {
+        // Check if empty state already exists
+        let emptyState = document.querySelector('#assignmentList .empty-state');
+        
+        if (!emptyState) {
+          // Create empty state
+          emptyState = document.createElement('div');
+          emptyState.className = 'empty-state';
+          emptyState.innerHTML = `<p>No ${filterType !== 'all' ? filterType : ''} assignments to display</p>`;
+          
+          // Clear the list and add empty state
+          const assignmentList = document.getElementById('assignmentList');
+          assignmentList.innerHTML = '';
+          assignmentList.appendChild(emptyState);
+        }
+      }
+    }
+  });
