@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>iLearn - Sign In</title>
+    <link rel="stylesheet" href="assets/signup.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <a href="index.html" style="text-decoration: none">
+        <div class="logo">
+          <img src="assets/logo-icon.png" alt="iLearn Logo" class="logo-img" />
+          iLearn
+        </div>
+      </a>
+    </nav>
+
+    <div class="auth-container">
+      <div class="auth-card">
+        <h2>Sign In</h2>
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="login-email">Email</label>
+            <input
+              type="email"
+              id="login-email"
+              name="email"
+              required
+              placeholder="Enter your email"
+            />
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <input
+              type="password"
+              id="login-password"
+              name="password"
+              required
+              placeholder="Enter your password"
+            />
+          </div>
+          <button type="submit" class="submit-btn">Sign In</button>
+          <div class="auth-links">
+            Don't have an account? <a href="signup.html">Sign Up</a>
+          </div>
+        </form>
+        <!-- Message container for feedback -->
+        <div id="message" class="message"></div>
+      </div>
+    </div>
+
+    <script src="scripts/auth.js"></script>
+  </body>
+</html>

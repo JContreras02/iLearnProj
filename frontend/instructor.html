@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>iLearn - Instructor Portal</title>
+    <link rel="stylesheet" href="assets/instructor.css">
+
+</head>
+    
+<body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <aside class="sidebar">
+        <a href="#" class="logo">
+          <img src="assets/logo-icon.png" alt="iLearn Logo" class="logo-img" />
+          iLearn
+        </a>
+        <ul class="nav-menu">
+          <li class="nav-item">
+            <a href="#dashboard" class="nav-link active">
+              <span class="nav-icon">📊</span>
+              Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#courses" class="nav-link">
+              <span class="nav-icon">📚</span>
+              My Courses
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#students" class="nav-link">
+              <span class="nav-icon">👥</span>
+              Students
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#assignments" class="nav-link">
+              <span class="nav-icon">📝</span>
+              Assignments
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#analytics" class="nav-link">
+              <span class="nav-icon">📈</span>
+              Analytics
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#discussions" class="nav-link">
+              <span class="nav-icon">💬</span>
+              Discussions
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#settings" class="nav-link">
+              <span class="nav-icon">⚙️</span>
+              Settings
+            </a>
+          </li>
+        </ul>
+        <div class="user-profile">
+          <img
+            src="/api/placeholder/100/100"
+            alt="Profile"
+            class="profile-img"
+            id="userProfileImage"
+          />
+          <div class="profile-info">
+            <div class="profile-name" id="userName"></div>
+            <div class="profile-email" id="userEmail"></div>
+            <button class="signout-btn" onclick="handleSignOut()">
+              <span class="signout-icon">🚪</span>
+              Sign Out
+            </button>
+          </div>
+        </div>
+
+
+</body>
+
+
+
+
+
+
+</html>

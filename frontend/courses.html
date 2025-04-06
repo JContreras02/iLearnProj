@@ -1,0 +1,257 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>iLearn - Course Catalog</title>
+    <link rel="stylesheet" href="assets/courses.css" />
+  </head>
+  
+  <body>
+    <nav class="navbar">
+      <a href="index.html" style="text-decoration: none">
+        <div class="logo">
+          <img
+            src="../assets/logo-icon.png"
+            alt="iLearn Logo"
+            class="logo-img"
+          />
+          iLearn
+        </div>
+      </a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="courses.html">Courses</a>
+        <a href="about.html">About</a>
+      </div>
+      <div class="auth-buttons">
+        <a href="signin.html" class="btn btn-login">Login</a>
+        <a href="signup.html" class="btn btn-signup">Signup</a>
+      </div>
+    </nav>
+
+    <section class="search-section">
+      <div class="search-container">
+        <div class="search-box">
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search for courses..."
+          />
+          <button class="search-btn">Search</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="main-content">
+      <aside class="filters">
+        <div class="filter-section">
+          <h3 class="filter-title">Categories</h3>
+          <div class="filter-option">
+            <input type="checkbox" id="web-dev" />
+            <label for="web-dev">Web Development</label>
+          </div>
+          <div class="filter-option">
+            <input type="checkbox" id="data-science" />
+            <label for="data-science">Data Science</label>
+          </div>
+          <div class="filter-option">
+            <input type="checkbox" id="design" />
+            <label for="design">Design</label>
+          </div>
+          <div class="filter-option">
+            <input type="checkbox" id="business" />
+            <label for="business">Business</label>
+          </div>
+        </div>
+
+        <div class="filter-section">
+          <h3 class="filter-title">Level</h3>
+          <div class="filter-option">
+            <input type="checkbox" id="beginner" />
+            <label for="beginner">Beginner</label>
+          </div>
+          <div class="filter-option">
+            <input type="checkbox" id="intermediate" />
+            <label for="intermediate">Intermediate</label>
+          </div>
+          <div class="filter-option">
+            <input type="checkbox" id="advanced" />
+            <label for="advanced">Advanced</label>
+          </div>
+        </div>
+
+        <div class="filter-section">
+          <h3 class="filter-title">Price</h3>
+          <div class="filter-option">
+            <input type="checkbox" id="free" />
+            <label for="free">Free</label>
+          </div>
+          <div class="filter-option">
+            <input type="checkbox" id="paid" />
+            <label for="paid">Paid</label>
+          </div>
+        </div>
+      </aside>
+
+      <main class="courses-container">
+        <div class="courses-header">
+          <div class="courses-count">Showing 12 courses</div>
+          <select class="sort-select">
+            <option value="popular">Most Popular</option>
+            <option value="newest">Newest</option>
+            <option value="price-low">Price: Low to High</option>
+            <option value="price-high">Price: High to Low</option>
+          </select>
+        </div>
+
+        <div class="courses-grid">
+          <!-- Course Card 1 -->
+          <div class="course-card">
+            <img
+              src="/api/placeholder/400/200"
+              alt="Course"
+              class="course-image"
+            />
+            <div class="course-info">
+              <span class="course-category">Web Development</span>
+              <h3 class="course-title">Complete Web Development Bootcamp</h3>
+              <p class="course-description">
+                Learn web development from scratch with HTML, CSS, JavaScript,
+                React, and Node.js.
+              </p>
+              <div class="course-meta">
+                <div class="course-rating">★ 4.8 (2.1k reviews)</div>
+                <div class="course-price">$89.99</div>
+              </div>
+            </div>
+            <button
+              class="enroll-btn"
+              onclick="enrollCourse('Complete Web Development Bootcamp')"
+            >
+              Enroll Now
+            </button>
+          </div>
+
+          <!-- Course Card 2 -->
+          <div class="course-card">
+            <img
+              src="/api/placeholder/400/200"
+              alt="Course"
+              class="course-image"
+            />
+            <div class="course-info">
+              <span class="course-category">Data Science</span>
+              <h3 class="course-title">Python for Data Analysis</h3>
+              <p class="course-description">
+                Master data analysis with Python, Pandas, NumPy, and Matplotlib.
+              </p>
+              <div class="course-meta">
+                <div class="course-rating">★ 4.9 (1.8k reviews)</div>
+                <div class="course-price">$79.99</div>
+              </div>
+            </div>
+            <button
+              class="enroll-btn"
+              onclick="enrollCourse('Python for Data Analysis')"
+            >
+              Enroll Now
+            </button>
+          </div>
+
+          <!-- Course Card 3 -->
+          <div class="course-card">
+            <img
+              src="/api/placeholder/400/200"
+              alt="Course"
+              class="course-image"
+            />
+            <div class="course-info">
+              <span class="course-category">Design</span>
+              <h3 class="course-title">UI/UX Design Fundamentals</h3>
+              <p class="course-description">
+                Learn the principles of user interface and user experience
+                design.
+              </p>
+              <div class="course-meta">
+                <div class="course-rating">★ 4.7 (1.5k reviews)</div>
+                <div class="course-price">$69.99</div>
+              </div>
+            </div>
+            <button
+              class="enroll-btn"
+              onclick="enrollCourse('UI/UX Design Fundamentals')"
+            >
+              Enroll Now
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      function enrollCourse(courseName) {
+        // Check if user is logged in (in a real app, this would be a backend check)
+        const isLoggedIn = checkUserLogin();
+
+        if (!isLoggedIn) {
+          alert("Please log in to enroll in courses");
+          window.location.href = "signin.html";
+          return;
+        }
+
+        // Simulate adding course to student portal
+        try {
+          let enrolledCourses =
+            JSON.parse(localStorage.getItem("enrolledCourses")) || [];
+
+          // Check if course is already enrolled
+          if (enrolledCourses.includes(courseName)) {
+            alert("You are already enrolled in this course");
+            return;
+          }
+
+          // Add course to enrolled courses
+          enrolledCourses.push(courseName);
+          localStorage.setItem(
+            "enrolledCourses",
+            JSON.stringify(enrolledCourses)
+          );
+
+          // Show success message
+          alert(`Successfully enrolled in: ${courseName}`);
+
+          // Redirect to student portal (in a real app, this would be a server-side operation)
+          window.location.href = "student.html";
+        } catch (error) {
+          console.error("Enrollment error:", error);
+          alert("Unable to enroll. Please try again.");
+        }
+      }
+
+      function checkUserLogin() {
+        // In a real application, this would be a secure backend authentication check
+        // For this example, we'll use a simple localStorage flag
+        return localStorage.getItem("isLoggedIn") === "true";
+      }
+
+      // Optional: Add an event listener to handle login state
+      document.addEventListener("DOMContentLoaded", () => {
+        const loginStatus = checkUserLogin();
+        const authButtons = document.querySelector(".auth-buttons");
+
+        if (loginStatus) {
+          // Replace login/signup buttons with logout and profile
+          authButtons.innerHTML = `
+            <a href="student-portal.html" class="btn btn-login">My Courses</a>
+            <a href="#" class="btn btn-signup" onclick="logout()">Logout</a>
+          `;
+        }
+      });
+
+      function logout() {
+        localStorage.removeItem("isLoggedIn");
+        window.location.href = "index.html";
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iLearn - Learn Without Limits</title>
+    <link rel="stylesheet" href="assets/index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+</head>
+<body>
+    <nav class="navbar">
+      <a href="#" style="text-decoration: none">
+        <div class="logo">
+          <img src="../assets/logo-icon.png" alt="iLearn Logo" class="logo-img"/>
+          iLearn
+        </div>
+      </a>
+      <div class="nav-links">
+        <a href="#">Home</a>
+        <a href="courses.html">Courses</a>
+        <a href="about.html">About</a>
+      </div>
+      <div class="auth-buttons">
+        <a href="signin.html" class="btn btn-login">Login</a>
+        <a href="signup.html" class="btn btn-signup">Signup</a>
+      </div>
+    </nav>
+
+    <section class="hero">
+      <div class="hero-content">
+        <h1>Learn Without Limits</h1>
+        <p>Access world-class education from anywhere, anytime</p>
+        <a href="signup.html" class="get-started">Get Started</a>
+      </div>
+      <div class="hero-images">
+        <div class="image-clip"></div>
+        <div class="image-clip"></div>
+        <div class="image-clip"></div>
+      </div>
+    </section>
+
+    <section class="featured">
+      <h2>Featured Courses</h2>
+      <div class="courses">
+        <div class="course-card">
+          <div class="course-image"></div>
+          <div class="course-info">
+            <h3>Introduction to Python</h3>
+            <p class="instructor">John Doe</p>
+            <p class="rating">5.5</p>
+            <a href="#enroll" class="enroll-btn">Enroll Now</a>
+          </div>
+        </div>
+        <div class="course-card">
+          <div class="course-image"></div>
+          <div class="course-info">
+            <h3>Web Dev Basics</h3>
+            <p class="instructor">John Doe</p>
+            <p class="rating">5.5</p>
+            <a href="#enroll" class="enroll-btn">Enroll Now</a>
+          </div>
+        </div>
+        <div class="course-card">
+          <div the="course-image"></div>
+          <div class="course-info">
+            <h3>Data Science Fundamentals</h3>
+            <p class="instructor">John Doe</p>
+            <p class="rating">5.5</p>
+            <a href="#enroll" class="enroll-btn">Enroll Now</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="how-it-works">
+      <h2>How It Works?</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <h3>Browse Courses</h3>
+          <p>Explore our range of courses</p>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <h3>Enroll & Learn</h3>
+          <p>Sign up and start learning at your own pace</p>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <h3>Get Certified</h3>
+          <p>Complete courses and earn certificates</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="testimonial">
+      <div class="testimonial-card">
+        <div class="testimonial-avatar"></div>
+        <h3>"This platform changed my life"</h3>
+        <p>
+          I was able to learn new skills and land my dream job thanks to the
+          courses on this platform. The instructors are top-notch and the
+          content is always up-to-date.
+        </p>
+        <p><strong>Sarah L. - Web Developer</strong></p>
+      </div>
+    </section>
+
+    <section class="cta">
+      <h2>Ready to start your learning journey?</h2>
+      <a href="courses.html" class="explore-btn">Explore Courses</a>
+    </section>
+
+    <script>
+      // Add event listener to ensure links are working
+      document.addEventListener("DOMContentLoaded", function () {
+        const getStartedBtn = document.querySelector(".get-started");
+        getStartedBtn.addEventListener("click", function (e) {
+          // Add a slight delay to see the hover effect before navigating
+          e.preventDefault();
+          setTimeout(() => {
+            window.location.href = "signup.html";
+          }, 200);
+        });
+      });
+    </script>
+</body>
+</html>
