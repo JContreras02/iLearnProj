@@ -117,8 +117,8 @@
             <label for="title">Course Title</label>
             <input type="text" id="title" name="title" required />
     
-            <label for="banner_url">Banner Image URL</label>
-            <input type="url" id="banner_url" name="banner_url" required />
+            <label for="banner">Upload Banner Image</label>
+            <input type="file" id="banner" name="banner" accept="image/*" required />
     
             <label for="description">Description</label>
             <textarea id="description" name="description" rows="5" required></textarea>
@@ -156,6 +156,10 @@
       </div>
     </section>
   </main>
+
+  <div id="toast" class="toast"></div>
+
   <script src="scripts/instructor.js"></script>
+
 </body>
 </html>

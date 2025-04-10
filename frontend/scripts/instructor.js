@@ -2,19 +2,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
 
-  // Redirect if not logged in or not an instructor
+  // Redirect if not logged in or not instructor
   if (!token || !user || (user.role && user.role.toLowerCase() !== "instructor")) {
     window.location.href = "signin.html";
     return;
   }
 
-  // Set welcome message
+  // Display Welcome Message & Name
   document.getElementById("welcomeMessage").textContent = `Welcome, ${user.name}!`;
-
-  // Set sidebar name
   document.getElementById("userName").textContent = user.name;
 
-  // Set today's date
+  // Display Date
   const dateTime = document.getElementById("dateTime");
   if (dateTime) {
     const now = new Date();
@@ -23,17 +21,64 @@ document.addEventListener("DOMContentLoaded", () => {
     dateTime.textContent = `Today is ${date}`;
   }
 
-  // Load dashboard content
   loadDashboardData(token);
+  loadMyCourses();
+
+  const form = document.getElementById("createCourseForm");
+
+  // Handle Course Creation Form Submission
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      // Get form inputs
+      const title = document.getElementById("title").value.trim();
+      const banner = document.getElementById("banner").files[0];
+      const description = document.getElementById("description").value.trim();
+
+      // Check if any field is empty
+      if (!title || !banner || !description) {
+        showToast("All fields are required!", false);
+        return;
+      }
+
+      // Limit file size (5MB max)
+      if (banner.size > 5 * 1024 * 1024) {
+        showToast("Image too large! Max 5MB", false);
+        return;
+      }
+
+      const formData = new FormData(form);
+
+      try {
+        const res = await fetch("/api/courses", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          showToast("Course created successfully!", true);
+          form.reset();
+          loadMyCourses(); // Refresh left side
+        } else {
+          showToast(data.error || "Failed to create course.", false);
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("Server error while creating course.", false);
+      }
+    });
+  }
 });
 
-// Load dashboard stats
+// Load Dashboard Stats
 async function loadDashboardData(token) {
   try {
     const res = await fetch("/api/instructor/dashboard", {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+      headers: { Authorization: `Bearer ${token}` }
     });
 
     if (!res.ok) throw new Error("Failed to load dashboard data");
@@ -42,41 +87,82 @@ async function loadDashboardData(token) {
 
     document.getElementById("totalCourses").textContent = `You have ${data.totalCourses} courses`;
     document.getElementById("topCourse").textContent = `Top Course: ${data.topCourse}`;
-    document.getElementById("totalStudents").textContent = `${data.totalStudents} students enrolled`;
-    document.getElementById("recentEnrollment").textContent = `Recent: ${data.recentEnrollment}`;
-
-    const notificationsList = document.getElementById("notificationsList");
-    notificationsList.innerHTML = data.notifications.map(note => `<li>${note}</li>`).join('');
   } catch (err) {
     console.error("Dashboard load error:", err);
   }
 }
 
-// Handle sign out
+// Load My Courses
+async function loadMyCourses() {
+  const token = localStorage.getItem("token");
+  const container = document.getElementById("myCoursesList");
+
+  try {
+    const res = await fetch("/api/courses/mine", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.length > 0) {
+      container.innerHTML = "";
+
+      data.forEach(course => {
+        const div = document.createElement("div");
+        div.innerHTML = `
+          <div class="course-card">
+            <img src="${course.banner_url}" class="course-banner" />
+            <div class="course-card-content">
+              <h4>${course.title}</h4>
+              <p>${course.description}</p>
+              <button class="manage-btn" onclick="manageCourse(${course.course_id})">Manage Course</button>
+            </div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    } else {
+      container.innerHTML = "<p>You haven't created any courses yet.</p>";
+    }
+  } catch (err) {
+    console.error("Error loading courses:", err);
+    container.innerHTML = "<p>Error loading courses.</p>";
+  }
+}
+
+// Navigate to Manage Course Page
+function manageCourse(courseId) {
+  window.location.href = `manage-course.html?id=${courseId}`;
+}
+
+// Sign Out Logic
 function handleSignOut() {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
   window.location.href = "signin.html";
 }
 
-// Show section logic (moved from HTML)
+// Section Switching Logic
 function showSection(sectionId) {
   const sections = document.querySelectorAll('.main-content > section');
-  sections.forEach(section => {
-    section.style.display = 'none';
-  });
+  sections.forEach(section => section.style.display = 'none');
 
   const active = document.getElementById(sectionId);
-  if (active) {
-    active.style.display = 'block';
-  }
+  if (active) active.style.display = 'block';
 
-  // Set active class in sidebar
-  document.querySelectorAll('.nav-link').forEach(link => {
-    link.classList.remove('active');
-  });
+  document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
   const navLinks = document.querySelectorAll(`.nav-link[onclick*="${sectionId}"]`);
-  if (navLinks.length) {
-    navLinks[0].classList.add('active');
-  }
+  if (navLinks.length) navLinks[0].classList.add('active');
+}
+
+// Toast Alert Logic
+function showToast(message, success = true) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.style.backgroundColor = success ? "#16a34a" : "#dc2626"; // green or red
+  toast.classList.add("show");
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 3000);
 }

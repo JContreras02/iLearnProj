@@ -17,8 +17,13 @@ app.use(express.static(path.join(__dirname, "../frontend")));
 
 // JWT Middleware
 function verifyToken(req, res, next) {
-  const token = req.headers["authorization"];
-  if (!token) return res.status(401).json({ error: "No token provided" });
+  const authHeader = req.headers["authorization"];
+
+  if (!authHeader) return res.status(401).json({ error: "No token provided" });
+
+  const token = authHeader.split(' ')[1];  // Grab just the token part
+
+  if (!token) return res.status(401).json({ error: "Invalid token format" });
 
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) return res.status(403).json({ error: "Invalid token" });
@@ -83,6 +88,14 @@ app.post("/signin", (req, res) => {
     });
   });
 });
+
+// instructor routes
+const instructorRoutes = require('./routes/instructor');
+
+app.use('/api', verifyToken, instructorRoutes);
+
+// Uploaded images to upload folder
+app.use('/uploads', express.static('uploads'));
 
 app.get("/", (req, res) => {
   res.send("<h1>📚 iLearn Backend is running!</h1>");
