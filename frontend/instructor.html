@@ -1,91 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>iLearn - Instructor Portal</title>
-    <link rel="stylesheet" href="assets/instructor.css">
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>iLearn - Instructor Dashboard</title>
+  <link rel="stylesheet" href="assets/instructor.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 </head>
-    
 <body>
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="loading-overlay">
-        <div class="loading-spinner"></div>
-    </div>
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
 
-    <aside class="sidebar">
-        <a href="#" class="logo">
-          <img src="assets/logo-icon.png" alt="iLearn Logo" class="logo-img" />
-          iLearn
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <a href="#" class="logo">
+      <img src="assets/logo-icon.png" alt="iLearn Logo" class="logo-img" />
+      iLearn
+    </a>
+    <ul class="nav-menu">
+      <li class="nav-item">
+        <a href="#" class="nav-link active" onclick="showSection('dashboardSection')">
+          <span class="nav-icon">📊</span> Dashboard
         </a>
-        <ul class="nav-menu">
-          <li class="nav-item">
-            <a href="#dashboard" class="nav-link active">
-              <span class="nav-icon">📊</span>
-              Dashboard
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#courses" class="nav-link">
-              <span class="nav-icon">📚</span>
-              My Courses
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#students" class="nav-link">
-              <span class="nav-icon">👥</span>
-              Students
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#assignments" class="nav-link">
-              <span class="nav-icon">📝</span>
-              Assignments
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#analytics" class="nav-link">
-              <span class="nav-icon">📈</span>
-              Analytics
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#discussions" class="nav-link">
-              <span class="nav-icon">💬</span>
-              Discussions
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="#settings" class="nav-link">
-              <span class="nav-icon">⚙️</span>
-              Settings
-            </a>
-          </li>
-        </ul>
-        <div class="user-profile">
-          <img
-            src="/api/placeholder/100/100"
-            alt="Profile"
-            class="profile-img"
-            id="userProfileImage"
-          />
-          <div class="profile-info">
-            <div class="profile-name" id="userName"></div>
-            <div class="profile-email" id="userEmail"></div>
-            <button class="signout-btn" onclick="handleSignOut()">
-              <span class="signout-icon">🚪</span>
-              Sign Out
-            </button>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link" onclick="showSection('courseManagementSection')">
+          <span class="nav-icon">📚</span> Course Management
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link" onclick="showSection('studentEngagementSection')">
+          <span class="nav-icon">👥</span> Student Engagement
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link" onclick="showSection('notificationsSection')">
+          <span class="nav-icon">🛎</span> Notifications
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link" onclick="showSection('quickToolsSection')">
+          <span class="nav-icon">⚙️</span> Quick Tools
+        </a>
+      </li>
+    </ul>
+    <div class="user-profile">
+      <img src="/api/placeholder/100/100" alt="Profile" class="profile-img" id="userProfileImage" />
+      <div class="profile-info">
+        <div class="profile-name" id="userName"></div>
+        <button class="signout-btn" onclick="handleSignOut()">
+          <span class="signout-icon">🚪</span> Sign Out
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!-- DASHBOARD SECTION -->
+    <section id="dashboardSection">
+      <header class="dashboard-header">
+        <h1 id="welcomeMessage">Welcome!</h1>
+        <p id="dateTime"></p>
+      </header>
+
+      <section class="dashboard-cards">
+        <div class="dashboard-card">
+          <h3>Course Management</h3>
+          <p id="totalCourses">Loading courses...</p>
+          <p id="topCourse"></p>
+        </div>
+        <div class="dashboard-card">
+          <h3>Student Engagement</h3>
+          <p id="totalStudents">Loading students...</p>
+          <p id="recentEnrollment"></p>
+        </div>
+        <div class="dashboard-card">
+          <h3>Notifications</h3>
+          <ul id="notificationsList">
+            <li>No new notifications</li>
+          </ul>
+        </div>
+        <div class="dashboard-card">
+          <h3>Quick Tools</h3>
+          <ul>
+            <li><a href="#" onclick="showSection('courseManagementSection')">Create New Course</a></li>
+            <li><a href="#">Edit Profile</a></li>
+            <li><a href="#">Help Center</a></li>
+          </ul>
+        </div>
+      </section>
+    </section>
+
+    <!-- COURSE MANAGEMENT SECTION -->
+    <section id="courseManagementSection" style="display: none;">
+      <div class="dashboard-header">
+        <h2>Course Management</h2>
+      </div>
+    
+      <div class="course-management-grid">
+        <!-- Left: My Courses -->
+        <div class="my-courses">
+          <h3>My Courses</h3>
+          <div id="myCoursesList">
+            <p>Loading your courses...</p>
           </div>
         </div>
+    
+        <!-- Right: Create Course -->
+        <div class="create-course">
+          <h3>Create New Course</h3>
+          <form id="createCourseForm">
+            <label for="title">Course Title</label>
+            <input type="text" id="title" name="title" required />
+    
+            <label for="banner_url">Banner Image URL</label>
+            <input type="url" id="banner_url" name="banner_url" required />
+    
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="5" required></textarea>
+    
+            <button type="submit" class="signout-btn" style="background: #2563eb; color: white; margin-top: 1rem;">
+              Create Course
+            </button>
+            <p id="formMessage" style="margin-top: 1rem;"></p>
+          </form>
+        </div>
+      </div>
+    </section>
 
+    <!-- STUDENT ENGAGEMENT -->
+    <section id="studentEngagementSection" style="display: none;">
+      <div class="dashboard-header">
+        <h2>Student Engagement</h2>
+        <p>Coming soon...</p>
+      </div>
+    </section>
 
+    <!-- NOTIFICATIONS -->
+    <section id="notificationsSection" style="display: none;">
+      <div class="dashboard-header">
+        <h2>Notifications</h2>
+        <p>Coming soon...</p>
+      </div>
+    </section>
+
+    <!-- QUICK TOOLS -->
+    <section id="quickToolsSection" style="display: none;">
+      <div class="dashboard-header">
+        <h2>Quick Tools</h2>
+        <p>Coming soon...</p>
+      </div>
+    </section>
+  </main>
+  <script src="scripts/instructor.js"></script>
 </body>
-
-
-
-
-
-
 </html>
