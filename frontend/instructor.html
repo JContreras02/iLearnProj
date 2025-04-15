@@ -132,6 +132,67 @@
       </div>
     </section>
 
+    <!-- MANAGE COURSE SECTION -->
+    <section id="manageCourseSection" style="display: none;">
+
+      <div class="dashboard-header manage-course-header">
+        <button onclick="showSection('courseManagementSection')" class="signout-btn back-btn">
+          ← Back to My Courses
+        </button>
+
+        <img id="manageCourseBanner" src="" alt="Course Banner" class="manage-course-banner">
+
+        <h2 id="manageCourseTitle">Managing: [Course Name]</h2>
+
+        <div class="course-visibility">
+          <span id="courseStatusBadge" class="status-badge draft">Draft 🔒</span>
+
+          <button id="toggleStatusBtn" class="signout-btn toggle-status-btn">
+            Publish Course
+          </button>
+        </div>
+      </div>
+
+      <div class="manage-course-grid">
+        <!-- Left Side: Existing Sections -->
+        <div class="existing-sections">
+          <h3>Course Sections</h3>
+          <div id="existingSectionsList">
+            <p>Loading sections...</p>
+          </div>
+        </div>
+
+        <!-- Right Side: Add New Section -->
+        <div class="add-section-container">
+          <h3>Add New Section</h3>
+
+          <form id="addSectionForm">
+            <label for="sectionTitle">Section Title</label>
+            <input type="text" id="sectionTitle" name="sectionTitle" required />
+
+            <label for="contentType">Content Type</label>
+            <select id="contentType" name="contentType" onchange="handleContentTypeChange()" required>
+              <option value="">Select Type</option>
+              <option value="video">Video</option>
+              <option value="reading">Reading</option>
+              <option value="quiz">Quiz</option>
+            </select>
+
+            <div id="dynamicContentInput" style="margin-top: 1rem;"></div>
+
+            <button type="submit" class="signout-btn" style="margin-top: 1rem; background: #2563eb; color: white;">
+              Add Section
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Toast Notification -->
+      <div id="toast" class="toast"></div>
+
+    </section>
+
+
     <!-- STUDENT ENGAGEMENT -->
     <section id="studentEngagementSection" style="display: none;">
       <div class="dashboard-header">
