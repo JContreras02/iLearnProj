@@ -70,8 +70,10 @@
       <section class="dashboard-cards">
         <div class="dashboard-card">
           <h3>Course Management</h3>
-          <p id="totalCourses">Loading courses...</p>
-          <p id="topCourse"></p>
+          <div id="dashboardCoursesList" class="dashboard-course-list">
+            <p>Loading courses...</p>
+          </div>
+          <a href="#" onclick="showSection('courseManagementSection')">View All Courses</a>
         </div>
         <div class="dashboard-card">
           <h3>Student Engagement</h3>
@@ -180,7 +182,7 @@
 
             <div id="dynamicContentInput" style="margin-top: 1rem;"></div>
 
-            <button type="submit" class="signout-btn" style="margin-top: 1rem; background: #2563eb; color: white;">
+            <button type="submit" class="signout-btn">
               Add Section
             </button>
           </form>
