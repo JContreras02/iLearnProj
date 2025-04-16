@@ -97,12 +97,23 @@ router.get('/courses/:id/sections', (req, res) => {
 
 // Add New Section to a Course
 router.post('/courses/:id/sections', (req, res) => {
+  const courseId = req.params.id;
   const { title, content_type, content_data } = req.body;
-  const course_id = req.params.id;
 
-  // Basic validation
   if (!title || !content_type) {
-    return res.status(400).json({ error: "Title and type are required" });
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  // Quiz validation logic
+  if (content_type === "quiz") {
+    try {
+      const parsedQuiz = JSON.parse(content_data);
+      if (!Array.isArray(parsedQuiz) || parsedQuiz.length === 0) {
+        return res.status(400).json({ error: 'Invalid quiz format' });
+      }
+    } catch (err) {
+      return res.status(400).json({ error: 'Invalid quiz format' });
+    }
   }
 
   const sql = `
@@ -110,13 +121,12 @@ router.post('/courses/:id/sections', (req, res) => {
     VALUES (?, ?, ?, ?)
   `;
 
-  db.query(sql, [course_id, title, content_type, content_data || null], (err, result) => {
+  db.query(sql, [courseId, title, content_type, content_data || null], (err, result) => {
     if (err) {
-      console.error("Error adding section:", err);
-      return res.status(500).json({ error: "Database error while adding section" });
+      console.error(err);
+      return res.status(500).json({ error: 'Error adding section' });
     }
-
-    res.status(201).json({ message: "Section added successfully" });
+    res.status(201).json({ message: 'Section added successfully' });
   });
 });
 
@@ -148,5 +158,42 @@ router.put('/courses/:id/status', (req, res) => {
   });
 });
 
+
+// === Dashboard Stats for Instructor ===
+router.get('/instructor/dashboard', (req, res) => {
+  const sql1 = `SELECT COUNT(*) AS totalCourses FROM courses WHERE instructor_id = ?`;
+  const sql2 = `SELECT title FROM courses WHERE instructor_id = ? ORDER BY created_at DESC LIMIT 1`;
+  const sql3 = `SELECT course_id, title, description, banner_url, status 
+                FROM courses 
+                WHERE instructor_id = ? 
+                ORDER BY created_at DESC`;
+
+  db.query(sql1, [req.userId], (err1, result1) => {
+    if (err1) {
+      console.error(err1);
+      return res.status(500).json({ error: 'Error loading dashboard' });
+    }
+
+    db.query(sql2, [req.userId], (err2, result2) => {
+      if (err2) {
+        console.error(err2);
+        return res.status(500).json({ error: 'Error loading dashboard' });
+      }
+
+      db.query(sql3, [req.userId], (err3, result3) => {
+        if (err3) {
+          console.error(err3);
+          return res.status(500).json({ error: 'Error loading dashboard' });
+        }
+
+        res.json({
+          totalCourses: result1[0].totalCourses,
+          topCourse: result2[0] ? result2[0].title : 'No courses yet',
+          courses: result3
+        });
+      });
+    });
+  });
+});
 
 module.exports = router;

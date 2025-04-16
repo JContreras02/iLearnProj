@@ -151,6 +151,38 @@ body {
   color: #64748b;
 }
 
+#dashboardCoursesList .course-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+#dashboardCoursesList .course-card h4 {
+  font-size: 1rem;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+#dashboardCoursesList .manage-btn {
+  background: #2563eb;
+  color: white;
+  padding: 0.4rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.dashboard-course-item {
+  margin-bottom: 1rem;
+}
+
+.dashboard-course-info h4 {
+  margin-bottom: 0.5rem;
+  color: #1e293b;
+}
+
 /* Course Management Grid */
 .course-management-grid {
   display: grid;
@@ -393,4 +425,154 @@ body {
   border-radius: 12px;
   margin-top: 1rem;
   margin-bottom: 1rem;
+}
+
+/* Quiz Preview Styling in Manage Course */
+.quiz-preview-toggle {
+  margin-left: 1rem;
+  font-size: 0.75rem;
+  padding: 0.3rem 0.6rem;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.quiz-preview-toggle:hover {
+  background: #1d4ed8;
+}
+
+.quiz-preview-details {
+  display: none;
+  margin-top: 0.5rem;
+}
+
+.quiz-preview-details ul {
+  margin-left: 1rem;
+}
+
+.quiz-preview-details li {
+  font-size: 0.9rem;
+}
+
+/*  Quiz Builder  */
+
+.quiz-question {
+  background: #f9fafb;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.quiz-question label {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.quiz-choices {
+  margin-top: 0.5rem;
+}
+
+.quiz-choice {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  align-items: center;
+}
+
+.quiz-question .remove-btn,
+.quiz-choice .remove-btn {
+  background: #dc2626;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.quiz-question .remove-btn:hover,
+.quiz-choice .remove-btn:hover {
+  background: #b91c1c;
+}
+
+.add-choice-btn,
+.add-question-btn {
+  background: #2563eb;
+  color: white;
+  padding: 0.4rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+.quiz-choice {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  align-items: center;
+}
+
+.add-choice-btn:hover,
+.add-question-btn:hover {
+  background: #1d4ed8;
+}
+
+/* === Mini Dashboard Course Card for Dashboard View === */
+
+.mini-course-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mini-course-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.mini-course-info h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: #1e293b;
+}
+
+.status-tag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+}
+
+.status-tag.published {
+  background: #ecfdf5;
+  color: #16a34a;
+}
+
+.status-tag.draft {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.small-manage {
+  background: #2563eb;
+  color: white;
+  padding: 0.4rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.small-manage:hover {
+  background: #1d4ed8;
 }
