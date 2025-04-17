@@ -45,6 +45,26 @@ function fetchPublishedCourses() {
     });
 }
 
+function searchCourses(query) {
+  fetch("/api/courses/published", {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`
+    }
+  })
+    .then((res) => res.json())
+    .then((courses) => {
+      const filtered = courses.filter(course =>
+        course.title.toLowerCase().includes(query.toLowerCase()) ||
+        course.description.toLowerCase().includes(query.toLowerCase())
+      );
+      displayCourses(filtered);
+    })
+    .catch((err) => {
+      console.error("Search failed:", err);
+      document.getElementById("browseCoursesContainer").innerHTML = "<p>Search failed.</p>";
+    });
+}
+
 // Handles switching between dashboard sections
 function showSection(sectionId) {
   const sections = document.querySelectorAll('.main-content > section');
@@ -76,11 +96,9 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  // Display welcome info
   document.getElementById("welcomeMessage").textContent = `Welcome, ${user.name}!`;
   document.getElementById("userName").textContent = user.name;
 
-  // Show current date
   const dateTime = document.getElementById("dateTime");
   if (dateTime) {
     const now = new Date();
@@ -91,21 +109,63 @@ document.addEventListener("DOMContentLoaded", () => {
   const lastSection = localStorage.getItem("studentActiveSection") || "dashboardSection";
   showSection(lastSection);
 
+  if (lastSection === "courseContentSection") {
+    const storedCourseId = localStorage.getItem("currentCourseId");
+    const storedCourseTitle = localStorage.getItem("currentCourseTitle");
+
+    if (storedCourseId && storedCourseTitle) {
+      loadCourseContent(storedCourseId, storedCourseTitle);
+    } else {
+      showSection("dashboardSection");
+    }
+  }
+
   if (lastSection === "browseCoursesSection") {
     fetchPublishedCourses();
   }
 
   document.querySelector('.nav-link[onclick*="browseCoursesSection"]')
-  .addEventListener("click", fetchPublishedCourses);
+    .addEventListener("click", fetchPublishedCourses);
 
   document.querySelector('.nav-link[onclick*="myCoursesSection"]')
-  .addEventListener("click", fetchMyCourses);
+    .addEventListener("click", fetchMyCourses);
 
   document.querySelector('.nav-link[onclick*="notificationsSection"]')
-  .addEventListener("click", fetchStudentNotifications);
+    .addEventListener("click", fetchStudentNotifications);
 
+  // ✅ Add search button + Enter key functionality here
+  document.getElementById("searchBtn").addEventListener("click", () => {
+    const query = document.getElementById("searchInput").value.trim();
+    searchCourses(query);
+  });
 
+  document.getElementById("searchInput").addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      document.getElementById("searchBtn").click();
+    }
+  });
 });
+
+function searchCourses(query) {
+  fetch("/api/courses/published", {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`
+    }
+  })
+    .then(res => res.json())
+    .then(courses => {
+      const filtered = courses.filter(course =>
+        course.title.toLowerCase().includes(query.toLowerCase()) ||
+        course.description.toLowerCase().includes(query.toLowerCase())
+      );
+      displayCourses(filtered);
+    })
+    .catch(err => {
+      console.error("Search failed:", err);
+      document.getElementById("browseCoursesContainer").innerHTML = "<p>Failed to search courses.</p>";
+    });
+}
 
 function enrollInCourse(courseId, courseTitle) {
   const confirmed = confirm(`Are you sure you want to enroll in "${courseTitle}"?`);
@@ -167,8 +227,7 @@ function fetchMyCourses() {
         <hr class="card-divider" />
         <p class="course-meta">Instructor: ${course.instructor_name}</p>
         <p>${course.description}</p>
-        <button class="enroll-btn" onclick="loadCourseContent(${course.course_id}, '${course.title.replace(/'/g, "\\'")}')">Proceed</button>
-      `;
+<button class="enroll-btn" onclick="handleCourseProceed(${course.course_id}, '${course.title.replace(/'/g, "\\'")}')">Proceed</button>      `;
 
         container.appendChild(card);
       });
@@ -370,51 +429,29 @@ function loadCourseContent(courseId, courseTitle) {
                 }
               });
 
-              quizForm.querySelectorAll("input").forEach(input => input.disabled = true);
-              const submitBtn = quizForm.querySelector("button[type='submit']");
-              submitBtn.disabled = true;
-              submitBtn.textContent = allCorrect ? "✅ All Correct!" : "Submitted";
-
-              // Always show retry button
-              const retryBtn = document.createElement("button");
-              retryBtn.className = "retry-btn";
-              retryBtn.textContent = "🔁 Retry Quiz";
-              retryBtn.type = "button";
-              retryBtn.style.marginTop = "1rem";
-              retryBtn.style.background = "#f97316";
-              retryBtn.style.color = "white";
-              retryBtn.style.padding = "0.5rem 1rem";
-              retryBtn.style.border = "none";
-              retryBtn.style.borderRadius = "8px";
-              retryBtn.style.cursor = "pointer";
-
-              retryBtn.addEventListener("click", () => {
-                questions.forEach((q, qi) => {
-                  const radios = quizForm.querySelectorAll(`input[name="q${qi}"]`);
-                  radios.forEach(radio => {
-                    radio.checked = false;
-                    radio.disabled = false;
-                  });
-                  const feedback = sectionDiv.querySelector(`#feedback-${qi}`);
-                  feedback.innerHTML = "";
-                });
-
-                submitBtn.disabled = false;
-                submitBtn.textContent = "Submit Quiz";
-                retryBtn.remove();
-              });
-
-              // Avoid duplicate retry buttons
-              if (!quizForm.querySelector(".retry-btn")) {
-                quizForm.appendChild(retryBtn);
-              }
-
-              // Move to next section if all correct
               if (allCorrect) {
-                setTimeout(() => {
-                  currentIndex++;
-                  renderSection(currentIndex);
-                }, 1500);
+                quizForm.querySelectorAll("input").forEach(input => input.disabled = true);
+                const submitBtn = quizForm.querySelector("button[type='submit']");
+                submitBtn.disabled = true;
+                submitBtn.textContent = "✅ All Correct!";
+
+                // Clear existing retry button if present
+                const existingRetry = sectionDiv.querySelector(".retry-quiz-btn");
+                if (existingRetry) existingRetry.remove();
+
+                const retryBtn = document.createElement("button");
+                retryBtn.textContent = "🔁 Retry Quiz";
+                retryBtn.classList.add("retry-quiz-btn");
+                retryBtn.addEventListener("click", () => {
+                  sectionDiv.innerHTML = ""; // clear inside the same card
+                  renderQuizContent(section, sectionDiv, index); // re-render quiz inside same card
+                });
+                quizForm.appendChild(retryBtn);
+
+                // 👉 Automatically show the next section (without removing this one)
+                if (index < sections.length - 1) {
+                  renderSection(index + 1); // render the next section below
+                }
               }
             });
           }
@@ -422,6 +459,7 @@ function loadCourseContent(courseId, courseTitle) {
           return;
         }
 
+        // For video/reading types: Add navigation buttons
         contentHTML += `
           <div class="btn-group">
             ${index > 0 ? `<button class="back-btn">⬅ Back</button>` : ""}
@@ -435,18 +473,100 @@ function loadCourseContent(courseId, courseTitle) {
         const doneBtn = sectionDiv.querySelector(".done-btn");
         if (doneBtn && index < sections.length - 1) {
           doneBtn.addEventListener("click", () => {
-            currentIndex++;
-            renderSection(currentIndex);
+            renderSection(index + 1);
           });
         }
 
         const backBtn = sectionDiv.querySelector(".back-btn");
         if (backBtn) {
           backBtn.addEventListener("click", () => {
-            const allCards = container.querySelectorAll(".section-card");
-            allCards[allCards.length - 1].remove();
-            currentIndex--;
+            const cards = container.querySelectorAll(".section-card");
+            if (cards.length > 1) cards[cards.length - 1].remove();
           });
+        }
+      }
+
+      // Helper to re-render a quiz without making a new card
+      function renderQuizContent(section, sectionDiv, index) {
+        let questions = [];
+        try {
+          questions = JSON.parse(section.content_data);
+          let contentHTML = `<h3>Section ${index + 1}: ${section.title}</h3>`;
+          contentHTML += `<form class="quiz-content">`;
+
+          questions.forEach((q, qi) => {
+            contentHTML += `<div class="quiz-question-block">
+              <p><strong>Q${qi + 1}:</strong> ${q.question}</p>`;
+
+            q.choices.forEach((choice, ci) => {
+              contentHTML += `
+                <label>
+                  <input type="radio" name="q${qi}" value="${ci}" />
+                  ${choice.text}
+                </label><br />
+              `;
+            });
+
+            contentHTML += `<div class="quiz-feedback" id="feedback-${qi}"></div>`;
+            contentHTML += `</div><br />`;
+          });
+
+          contentHTML += `<button type="submit" class="quiz-submit-btn">Submit Quiz</button>`;
+          contentHTML += `</form>`;
+          sectionDiv.innerHTML = contentHTML;
+
+          const quizForm = sectionDiv.querySelector("form.quiz-content");
+          quizForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+
+            let allCorrect = true;
+
+            questions.forEach((q, qi) => {
+              const selected = quizForm.querySelector(`input[name="q${qi}"]:checked`);
+              const feedback = sectionDiv.querySelector(`#feedback-${qi}`);
+
+              if (!selected) {
+                allCorrect = false;
+                feedback.innerHTML = `<span style="color: #dc2626;">Please answer this question.</span>`;
+                return;
+              }
+
+              const selectedIndex = parseInt(selected.value);
+              const selectedChoice = q.choices[selectedIndex];
+
+              if (selectedChoice.isCorrect) {
+                feedback.innerHTML = `<span style="color: #16a34a;">✅ Correct!</span>`;
+              } else {
+                allCorrect = false;
+                feedback.innerHTML = `<span style="color: #dc2626;">❌ Incorrect. ${selectedChoice.explanation || "Try again."}</span>`;
+              }
+            });
+
+            if (allCorrect) {
+              quizForm.querySelectorAll("input").forEach(input => input.disabled = true);
+              const submitBtn = quizForm.querySelector("button[type='submit']");
+              submitBtn.disabled = true;
+              submitBtn.textContent = "✅ All Correct!";
+
+              const existingRetry = sectionDiv.querySelector(".retry-quiz-btn");
+              if (existingRetry) existingRetry.remove();
+
+              const retryBtn = document.createElement("button");
+              retryBtn.textContent = "🔁 Retry Quiz";
+              retryBtn.classList.add("retry-quiz-btn");
+              retryBtn.addEventListener("click", () => {
+                sectionDiv.innerHTML = "";
+                renderQuizContent(section, sectionDiv, index);
+              });
+              quizForm.appendChild(retryBtn);
+
+              if (index < sections.length - 1) {
+                renderSection(index + 1);
+              }
+            }
+          });
+        } catch (err) {
+          sectionDiv.innerHTML = `<p>[Invalid Quiz Format]</p>`;
         }
       }
 
@@ -456,4 +576,11 @@ function loadCourseContent(courseId, courseTitle) {
       console.error("Failed to load course sections:", err);
       container.innerHTML = "<p>Something went wrong while loading this course.</p>";
     });
+}
+
+function handleCourseProceed(courseId, courseTitle) {
+  localStorage.setItem("studentActiveSection", "courseContentSection");
+  localStorage.setItem("currentCourseId", courseId);
+  localStorage.setItem("currentCourseTitle", courseTitle);
+  loadCourseContent(courseId, courseTitle);
 }

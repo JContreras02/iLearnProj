@@ -205,27 +205,52 @@ router.patch("/notifications/:id/read", (req, res) => {
 // GET /api/courses/:courseId/sections
 router.get("/:courseId/sections", (req, res) => {
     const courseId = req.params.courseId;
+    const studentId = req.userId;
   
     const query = `
       SELECT 
-        section_id,
-        title,
-        content_type,
-        content_data,
-        visibility,
-        created_at
-      FROM sections
-      WHERE course_id = ?
-      ORDER BY created_at ASC
+        s.section_id,
+        s.title,
+        s.content_type,
+        s.content_data,
+        s.visibility,
+        s.created_at,
+        IF(sc.section_id IS NOT NULL, 1, 0) AS is_completed
+      FROM sections s
+      LEFT JOIN section_completion sc 
+        ON s.section_id = sc.section_id AND sc.student_id = ?
+      WHERE s.course_id = ?
+      ORDER BY s.created_at ASC
     `;
   
-    db.query(query, [courseId], (err, results) => {
+    db.query(query, [studentId, courseId], (err, results) => {
       if (err) {
         console.error("Error fetching course sections:", err);
         return res.status(500).json({ error: "Failed to load course content." });
       }
   
       res.json(results);
+    });
+  });
+
+  
+// POST /api/courses/section/:sectionId/complete
+router.post("/section/:sectionId/complete", (req, res) => {
+    const studentId = req.userId; // from your JWT middleware
+    const sectionId = req.params.sectionId;
+  
+    const query = `
+      INSERT IGNORE INTO user_progress (user_id, section_id)
+      VALUES (?, ?)
+    `;
+  
+    db.query(query, [studentId, sectionId], (err) => {
+      if (err) {
+        console.error("Error saving progress:", err);
+        return res.status(500).json({ error: "Could not save progress." });
+      }
+  
+      res.status(200).json({ message: "Section marked complete." });
     });
   });
 
