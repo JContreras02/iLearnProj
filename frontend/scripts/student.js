@@ -101,6 +101,10 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelector('.nav-link[onclick*="myCoursesSection"]')
   .addEventListener("click", fetchMyCourses);
 
+  document.querySelector('.nav-link[onclick*="notificationsSection"]')
+  .addEventListener("click", fetchStudentNotifications);
+
+
 });
 
 function enrollInCourse(courseId, courseTitle) {
@@ -193,5 +197,263 @@ function unenrollFromCourse(courseId, courseTitle) {
     .catch((err) => {
       console.error("Unenroll failed:", err);
       alert("Something went wrong while trying to unenroll.");
+    });
+}
+
+// notifications
+function fetchStudentNotifications() {
+  fetch("/api/courses/notifications", {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`
+    }
+  })
+    .then((res) => res.json())
+    .then((notifications) => {
+      const container = document.getElementById("notificationsContainer");
+      container.innerHTML = "";
+
+      if (!Array.isArray(notifications) || notifications.length === 0) {
+        container.innerHTML = "<p>No notifications yet.</p>";
+        return;
+      }
+
+      notifications.forEach(note => {
+        const div = document.createElement("div");
+        div.classList.add("notification-card");
+        if (!note.is_read) div.classList.add("unread");
+
+        div.setAttribute("onclick", `markNotificationAsRead(${note.notification_id})`);
+
+        div.innerHTML = `
+          <p>${note.message}</p>
+          <span class="notif-time">${new Date(note.created_at).toLocaleString()}</span>
+          <button class="notif-dismiss" onclick="deleteNotification(${note.notification_id})">×</button>
+        `;
+        container.appendChild(div);
+      });
+    })
+    .catch(err => {
+      console.error("Failed to load notifications:", err);
+      document.getElementById("notificationsContainer").innerHTML = "<p>Error loading notifications.</p>";
+    });
+}
+
+function deleteNotification(notificationId) {
+  fetch(`/api/courses/notifications/${notificationId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`
+    }
+  })
+    .then(res => res.json())
+    .then(() => {
+      fetchStudentNotifications(); // refresh the list
+    })
+    .catch(err => {
+      console.error("Failed to delete notification:", err);
+    });
+}
+
+function markNotificationAsRead(notificationId) {
+  fetch(`/api/courses/notifications/${notificationId}/read`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`
+    }
+  })
+    .then(res => res.json())
+    .then(() => {
+      fetchStudentNotifications();
+    })
+    .catch(err => {
+      console.error("Failed to mark as read:", err);
+    });
+}
+
+function loadCourseContent(courseId, courseTitle) {
+  showSection("courseContentSection");
+  document.getElementById("courseContentTitle").textContent = courseTitle;
+  const container = document.getElementById("courseSectionsContainer");
+  container.innerHTML = "<p>Loading...</p>";
+
+  fetch(`/api/courses/${courseId}/sections`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`
+    }
+  })
+    .then(res => res.json())
+    .then(sections => {
+      if (!Array.isArray(sections) || sections.length === 0) {
+        container.innerHTML = "<p>No sections available for this course yet.</p>";
+        return;
+      }
+
+      container.innerHTML = "";
+      let currentIndex = 0;
+
+      function renderSection(index) {
+        const section = sections[index];
+        const sectionDiv = document.createElement("div");
+        sectionDiv.classList.add("section-card");
+
+        let contentHTML = `<h3>Section ${index + 1}: ${section.title}</h3>`;
+
+        if (section.content_type === "video") {
+          let embedUrl = section.content_data;
+          if (embedUrl.includes("watch?v=")) {
+            embedUrl = embedUrl.replace("watch?v=", "embed/");
+          }
+          contentHTML += `
+            <div class="video-wrapper">
+              <iframe src="${embedUrl}" frameborder="0" allowfullscreen></iframe>
+            </div>
+          `;
+        } else if (section.content_type === "reading") {
+          contentHTML += `<div class="reading-content">${section.content_data}</div>`;
+        } else if (section.content_type === "quiz") {
+          let questions = [];
+          try {
+            questions = JSON.parse(section.content_data);
+            contentHTML += `<form class="quiz-content">`;
+
+            questions.forEach((q, qi) => {
+              contentHTML += `<div class="quiz-question-block">
+                <p><strong>Q${qi + 1}:</strong> ${q.question}</p>`;
+
+              q.choices.forEach((choice, ci) => {
+                contentHTML += `
+                  <label>
+                    <input type="radio" name="q${qi}" value="${ci}" />
+                    ${choice.text}
+                  </label><br />
+                `;
+              });
+
+              contentHTML += `<div class="quiz-feedback" id="feedback-${qi}"></div>`;
+              contentHTML += `</div><br />`;
+            });
+
+            contentHTML += `<button type="submit" class="quiz-submit-btn">Submit Quiz</button>`;
+            contentHTML += `</form>`;
+          } catch (err) {
+            contentHTML += `<p>[Invalid Quiz Format]</p>`;
+          }
+
+          sectionDiv.innerHTML = contentHTML;
+          container.appendChild(sectionDiv);
+
+          const quizForm = sectionDiv.querySelector("form.quiz-content");
+          if (quizForm) {
+            quizForm.addEventListener("submit", (e) => {
+              e.preventDefault();
+
+              let allCorrect = true;
+
+              questions.forEach((q, qi) => {
+                const selected = quizForm.querySelector(`input[name="q${qi}"]:checked`);
+                const feedback = sectionDiv.querySelector(`#feedback-${qi}`);
+
+                if (!selected) {
+                  allCorrect = false;
+                  feedback.innerHTML = `<span style="color: #dc2626;">Please answer this question.</span>`;
+                  return;
+                }
+
+                const selectedIndex = parseInt(selected.value);
+                const selectedChoice = q.choices[selectedIndex];
+
+                if (selectedChoice.isCorrect) {
+                  feedback.innerHTML = `<span style="color: #16a34a;">✅ Correct!</span>`;
+                } else {
+                  allCorrect = false;
+                  feedback.innerHTML = `<span style="color: #dc2626;">❌ Incorrect. ${selectedChoice.explanation || "Try again."}</span>`;
+                }
+              });
+
+              quizForm.querySelectorAll("input").forEach(input => input.disabled = true);
+              const submitBtn = quizForm.querySelector("button[type='submit']");
+              submitBtn.disabled = true;
+              submitBtn.textContent = allCorrect ? "✅ All Correct!" : "Submitted";
+
+              // Always show retry button
+              const retryBtn = document.createElement("button");
+              retryBtn.className = "retry-btn";
+              retryBtn.textContent = "🔁 Retry Quiz";
+              retryBtn.type = "button";
+              retryBtn.style.marginTop = "1rem";
+              retryBtn.style.background = "#f97316";
+              retryBtn.style.color = "white";
+              retryBtn.style.padding = "0.5rem 1rem";
+              retryBtn.style.border = "none";
+              retryBtn.style.borderRadius = "8px";
+              retryBtn.style.cursor = "pointer";
+
+              retryBtn.addEventListener("click", () => {
+                questions.forEach((q, qi) => {
+                  const radios = quizForm.querySelectorAll(`input[name="q${qi}"]`);
+                  radios.forEach(radio => {
+                    radio.checked = false;
+                    radio.disabled = false;
+                  });
+                  const feedback = sectionDiv.querySelector(`#feedback-${qi}`);
+                  feedback.innerHTML = "";
+                });
+
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Submit Quiz";
+                retryBtn.remove();
+              });
+
+              // Avoid duplicate retry buttons
+              if (!quizForm.querySelector(".retry-btn")) {
+                quizForm.appendChild(retryBtn);
+              }
+
+              // Move to next section if all correct
+              if (allCorrect) {
+                setTimeout(() => {
+                  currentIndex++;
+                  renderSection(currentIndex);
+                }, 1500);
+              }
+            });
+          }
+
+          return;
+        }
+
+        contentHTML += `
+          <div class="btn-group">
+            ${index > 0 ? `<button class="back-btn">⬅ Back</button>` : ""}
+            ${index < sections.length - 1 ? `<button class="done-btn">Next</button>` : `<button class="done-btn" disabled>Completed</button>`}
+          </div>
+        `;
+
+        sectionDiv.innerHTML = contentHTML;
+        container.appendChild(sectionDiv);
+
+        const doneBtn = sectionDiv.querySelector(".done-btn");
+        if (doneBtn && index < sections.length - 1) {
+          doneBtn.addEventListener("click", () => {
+            currentIndex++;
+            renderSection(currentIndex);
+          });
+        }
+
+        const backBtn = sectionDiv.querySelector(".back-btn");
+        if (backBtn) {
+          backBtn.addEventListener("click", () => {
+            const allCards = container.querySelectorAll(".section-card");
+            allCards[allCards.length - 1].remove();
+            currentIndex--;
+          });
+        }
+      }
+
+      renderSection(currentIndex);
+    })
+    .catch(err => {
+      console.error("Failed to load course sections:", err);
+      container.innerHTML = "<p>Something went wrong while loading this course.</p>";
     });
 }
