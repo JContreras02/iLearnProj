@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.user.role === 'instructor') {
               window.location.href = 'instructor.html';
             } else {
-              window.location.href = 'student-dashboard.html';
+              window.location.href = 'student.html';
             }
           }, 1500);
         }

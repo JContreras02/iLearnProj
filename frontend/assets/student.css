@@ -1,0 +1,324 @@
+
+@import url("https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css");
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  background: #f8fafc;
+  min-height: 100vh;
+  display: flex;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  background: white;
+  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  height: 100vh;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #2563eb;
+  margin-bottom: 2rem;
+  text-decoration: none;
+}
+
+.logo-img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.nav-menu {
+  list-style: none;
+  flex: 1;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  color: #64748b;
+  border-radius: 8px;
+  transition: 0.3s ease;
+  cursor: pointer;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+}
+
+.user-profile {
+  padding: 1rem;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: auto;
+}
+
+.profile-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e2e8f0;
+}
+
+.profile-name {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.signout-btn {
+  padding: 0.5rem 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s ease;
+  width: 100%;
+}
+
+.signout-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* Main Content */
+.main-content {
+  margin-left: 260px;
+  padding: 2rem;
+  width: 100%;
+}
+
+.dashboard-header h1,
+.dashboard-header h2 {
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-header p {
+  color: #64748b;
+}
+
+/* Dashboard cards */
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.dashboard-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: 0.3s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+.dashboard-card h3 {
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-card p {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+/* === Search Box === */
+.search-section {
+  background: linear-gradient(135deg, #0066cc, #4993ee);
+  padding: 2rem;
+}
+
+.search-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.search-box {
+  display: flex;
+  gap: 1rem;
+  background: white;
+  padding: 0.5rem;
+  border-radius: 50px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  outline: none;
+}
+
+.search-btn {
+  background: linear-gradient(45deg, #1a365d, #2563eb);
+  color: white;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.search-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Browse Courses Card */
+.browse-heading {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* --- Course Card --- */
+.card-banner-wrapper {
+  position: relative;
+}
+
+.course-banner {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.course-result-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.course-result-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.course-result-card h4 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.75rem;
+  text-transform: capitalize;
+}
+
+.card-divider {
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, #d1d5db, #2563eb, #d1d5db);
+  margin: 0.75rem 0;
+}
+
+.course-result-card p {
+  font-size: 0.95rem;
+  color: #475569;
+  flex-grow: 1;
+  margin-bottom: 0.5rem;
+}
+
+/* --- Enroll Button --- */
+.enroll-btn {
+  background: #22c55e;
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  width: 100%;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background 0.3s ease;
+}
+
+.enroll-btn:hover {
+  background: #16a34a;
+}
+
+/* --- Unenroll Button --- */
+.unenroll-button-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: -0.5rem 0 0.75rem;
+}
+
+.unenroll-small-btn {
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.unenroll-small-btn:hover {
+  background-color: #dc2626;
+}
+
+
+
+/* --- Extra Meta --- */
+.course-meta {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 0.5rem;
+}
+
+.course-tag {
+  background-color: #f1f5f9;
+  color: #2563eb;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  display: inline-block;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+}

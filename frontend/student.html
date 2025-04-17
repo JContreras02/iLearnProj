@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>iLearn - Student Dashboard</title>
+    <link rel="stylesheet" href="assets/student.css" />
+  </head>
+
+  <body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <a href="#" class="logo">
+        <img src="assets/logo-icon.png" alt="iLearn Logo" class="logo-img" />
+        iLearn
+      </a>
+      <ul class="nav-menu">
+        <li class="nav-item">
+          <a href="#" class="nav-link active" onclick="showSection('dashboardSection')">
+            📊 Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link" onclick="showSection('myCoursesSection')">
+            📚 My Courses
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link" onclick="showSection('browseCoursesSection')">
+            🔍 Browse Courses
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link" onclick="showSection('notificationsSection')">
+            🛎 Notifications
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link" onclick="showSection('settingsSection')">
+            ⚙️ Settings
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link" onclick="showSection('badgesSection')">
+            🏅 Badges
+          </a>
+        </li>
+      </ul>
+      <div class="user-profile">
+        <img src="/api/placeholder/100/100" alt="Profile" class="profile-img" id="userProfileImage" />
+        <div class="profile-info">
+          <div class="profile-name" id="userName"></div>
+          <button class="signout-btn" onclick="handleSignOut()">
+            🚪 Sign Out
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Dashboard Section -->
+      <section id="dashboardSection">
+        <div class="dashboard-header">
+          <h1 id="welcomeMessage">Welcome!</h1>
+          <p id="dateTime">Today is ...</p>
+        </div>
+
+        <div class="dashboard-cards">
+          <div class="dashboard-card">
+            <h3>My Courses</h3>
+            <p>View your enrolled courses and track progress</p>
+          </div>
+          <div class="dashboard-card">
+            <h3>Browse Courses</h3>
+            <p>Explore new learning opportunities</p>
+          </div>
+          <div class="dashboard-card">
+            <h3>Badges</h3>
+            <p>Earn recognition for your learning</p>
+          </div>
+          <div class="dashboard-card">
+            <h3>Notifications</h3>
+            <p>Stay updated with course alerts</p>
+          </div>
+          <div class="dashboard-card">
+            <h3>Settings</h3>
+            <p>Customize your experience</p>
+          </div>
+          <div class="dashboard-card">
+            <h3>Support</h3>
+            <p>Get help and contact support</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- My Courses Section -->
+      <section id="myCoursesSection" style="display:none;">
+        <h2 class="browse-heading">My Courses</h2>
+        <div id="myCoursesContainer">
+          <!-- Enrolled courses will show here -->
+        </div>
+      </section>
+
+      <!-- Browse Courses Section -->
+      <section id="browseCoursesSection" style="display: none;">
+        <h2 class="browse-heading">Browse Courses</h2>
+        <div class="search-section">
+          <div class="search-container">
+            <div class="search-box">
+              <input type="text" id="searchInput" class="search-input" placeholder="Search for courses..."/>
+              <button id="searchBtn" class="search-btn">Search</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="browse-courses-container" id="browseCoursesContainer">
+          <!-- Search results (course cards) will be injected here -->
+        </div>
+      </section>
+
+      <!-- Notifications Section -->
+      <section id="notificationsSection" style="display:none;">
+        <h2>Notifications</h2>
+        <p>All notifications show up here.</p>
+      </section>
+
+      <!-- Settings Section -->
+      <section id="settingsSection" style="display:none;">
+        <h2>Settings</h2>
+        <p>Update your preferences and settings.</p>
+      </section>
+
+      <!-- Badges Section -->
+      <section id="badgesSection" style="display:none;">
+        <h2>Badges</h2>
+        <p>Earned badges will be displayed here.</p>
+      </section>
+      </main>
+
+    <script src="scripts/student.js"></script>
+  </body>
+</html>
