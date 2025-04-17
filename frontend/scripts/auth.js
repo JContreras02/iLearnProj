@@ -1,118 +1,145 @@
-// Signup Form Submission
-document.getElementById("signupForm")?.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  // Get form values
-  const name = document.getElementById("name").value;
-  const email = document.getElementById("signup-email").value;
-  const password = document.getElementById("signup-password").value;
-  const confirmPassword = document.getElementById("confirm-password").value;
-  const role = document.querySelector('input[name="role"]:checked').value;
-
-  // Clear previous error messages
-  clearErrors();
-
-  // Basic validation
-  if (password !== confirmPassword) {
-    showError("confirmPasswordError", "Passwords do not match");
-    return;
-  }
-
-  if (password.length < 6) {
-    showError("passwordError", "Password must be at least 6 characters");
-    return;
-  }
-
-  try {
-    // Send data to the backend
-    const response = await fetch("http://localhost:3000/signup", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ name, email, password, role }),
-    });
-
-    const data = await response.json();
-
-    // Handle backend response
-    if (!response.ok) {
-      throw new Error(data.error || "Signup failed");
-    }
-
-    // Display success message
-    showMessage("Signup successful! Redirecting to login...", "success");
-
-    // Redirect to signin.html after 2 seconds
-    setTimeout(() => {
-      window.location.href = "signin.html";
-    }, 2000);
-  } catch (error) {
-    console.error("Error:", error);
-    showMessage(error.message, "error");
-  }
-});
-
-// Login Form Submission
-document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const email = document.getElementById("login-email").value;
-  const password = document.getElementById("login-password").value;
-
-  try {
-    const response = await fetch("http://localhost:3000/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await response.json();
-    console.log("Login response:", data);
-
-    if (!response.ok) {
-      throw new Error(data.error || "Login failed");
-    }
-
-    // Store the token in localStorage
-    localStorage.setItem("token", data.token);
-    console.log("Token stored:", data.token);
-    console.log("User role:", data.user.role);
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM fully loaded and parsed');
   
-
-    // Redirect based on role
-    if (data.user.role === "student") {
-      window.location.href = "student.html";
-    } else if (data.user.role === "instructor") {
-      window.location.href = "instructor.html";
+  // Function to display messages
+  function showMessage(text, isSuccess) {
+    const messageEl = document.getElementById('message');
+    if (messageEl) {
+      messageEl.textContent = text;
+      messageEl.className = 'message'; // Reset classes
+      messageEl.classList.add(isSuccess ? 'success' : 'error');
     }
-  } catch (error) {
-    console.error("Error:", error);
-    showMessage(error.message, "error");
+  }
+
+  // Handle Signup Form
+  const signupForm = document.getElementById('signupForm');
+  if (signupForm) {
+    console.log('Signup form found, adding event listener');
+    
+    signupForm.addEventListener('submit', function(e) {
+      console.log('Signup form submitted');
+      
+      // Always prevent the default form submission
+      e.preventDefault();
+      
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('signup-email').value;
+      const password = document.getElementById('signup-password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      const roleInput = document.querySelector('input[name="role"]:checked');
+      const role = roleInput ? roleInput.value : 'student';
+      
+      console.log('Form data collected:', { name, email, role });
+      
+      // Validate passwords match
+      if (password !== confirmPassword) {
+        const confirmPasswordError = document.getElementById('confirmPasswordError');
+        if (confirmPasswordError) {
+          confirmPasswordError.textContent = "Passwords do not match";
+          confirmPasswordError.style.display = 'block';
+        } else {
+          showMessage("Passwords do not match", false);
+        }
+        return;
+      }
+      
+      // Log the actual data being sent to the server
+      const requestData = { name, email, password, role };
+      console.log('Sending to server:', requestData);
+      
+      // Send the data to the server using fetch API
+      fetch('http://localhost:3000/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+      })
+      .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', [...response.headers].map(h => h.join(': ')).join('\n'));
+        return response.json();
+      })
+      .then(data => {
+        console.log('Server response data:', data);
+        
+        if (data.message) {
+          // Success case
+          showMessage(data.message, true);
+          signupForm.reset();
+          
+          // Redirect to signin page after 1.5 seconds
+          setTimeout(() => {
+            window.location.href = 'signin.html';
+          }, 1500);
+        } else if (data.error) {
+          // Error case
+          showMessage(data.error, false);
+        }
+      })
+      .catch(error => {
+        console.error('Fetch error:', error);
+        showMessage("Server error. Please try again later.", false);
+      });
+    });
+  }
+
+  // Handle Login Form
+  const loginForm = document.getElementById('loginForm');
+  if (loginForm) {
+    console.log('Login form found, adding event listener');
+    
+    loginForm.addEventListener('submit', function(e) {
+      console.log('Login form submitted');
+      
+      // Always prevent the default form submission
+      e.preventDefault();
+      
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      
+      console.log('Login data collected:', { email });
+      
+      // Send the data to the server using fetch API
+      fetch('http://localhost:3000/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      })
+      .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+      })
+      .then(data => {
+        console.log('Server response data:', data);
+        
+        if (data.message) {
+          // Success case
+          showMessage(data.message, true);
+          
+          // Store user data and token in localStorage
+          localStorage.setItem('user', JSON.stringify(data.user));
+          localStorage.setItem('token', data.token);
+          
+          // Redirect based on role after 1.5 seconds
+          setTimeout(() => {
+            if (data.user.role === 'instructor') {
+              window.location.href = 'instructor.html';
+            } else {
+              window.location.href = 'student.html';
+            }
+          }, 1500);
+        } else if (data.error) {
+          // Error case
+          showMessage(data.error, false);
+        }
+      })
+      .catch(error => {
+        console.error('Fetch error:', error);
+        showMessage("Server error. Please try again later.", false);
+      });
+    });
   }
 });
-
-// Helper function to display error messages
-function showError(elementId, message) {
-  const errorElement = document.getElementById(elementId);
-  errorElement.textContent = message;
-  errorElement.style.display = "block";
-}
-
-// Helper function to clear all error messages
-function clearErrors() {
-  const errorElements = document.getElementsByClassName("error-message");
-  Array.from(errorElements).forEach((element) => {
-    element.style.display = "none";
-    element.textContent = "";
-  });
-}
-
-// Helper function to display success/error messages
-function showMessage(message, type) {
-  const messageElement = document.getElementById("message");
-  messageElement.textContent = message;
-  messageElement.className = `message ${type}`; // Add CSS class for styling
-}
