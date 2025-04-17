@@ -61,25 +61,31 @@
         </div>
 
         <div class="dashboard-cards">
-          <div class="dashboard-card">
+          <!-- My Courses -->
+          <div class="dashboard-card" id="recentCoursesCard">
             <h3>My Courses</h3>
-            <p>View your enrolled courses and track progress</p>
+            <div id="dashboardMyCourses" class="mini-course-list"></div>
+            <button onclick="showSection('myCoursesSection')">Go to My Courses</button>
           </div>
+      
+          <!-- Browse Courses -->
           <div class="dashboard-card">
             <h3>Browse Courses</h3>
             <p>Explore new learning opportunities</p>
+            <button onclick="showSection('browseCoursesSection')">Take Me There</button>
           </div>
-          <div class="dashboard-card">
+      
+          <!-- Notifications -->
+          <div class="dashboard-card" id="dashboardNotifCard">
             <h3>Notifications</h3>
-            <p>Stay updated with course alerts</p>
+            <div id="dashboardNotifs" class="mini-notif-list"></div>
+            <button onclick="showSection('notificationsSection')">View All</button>
           </div>
+      
+          <!-- Settings -->
           <div class="dashboard-card">
             <h3>Settings</h3>
-            <p>Customize your experience</p>
-          </div>
-          <div class="dashboard-card">
-            <h3>Support</h3>
-            <p>Get help and contact support</p>
+            <p>Coming soon!</p>
           </div>
         </div>
       </section>
@@ -118,6 +124,7 @@
       </section>
 
       <!-- Notifications Section -->
+      <!-- Notifications Section -->
       <section id="notificationsSection" style="display:none;">
         <h2 class="browse-heading">Notifications</h2>
         <div id="notificationsContainer">
@@ -129,6 +136,23 @@
       <section id="settingsSection" style="display:none;">
         <h2>Settings</h2>
         <p>Update your preferences and settings.</p>
+      
+        <!-- Profile Picture -->
+        <div class="settings-block">
+          <h3>Update Profile Picture</h3>
+          <img id="previewProfile" src="/api/placeholder/100/100" alt="Profile Preview" class="profile-img" />
+          <input type="file" id="profileInput" accept="image/*" />
+          <button onclick="uploadProfileImage()">Upload</button>
+        </div>
+      
+        <!-- Password Update -->
+        <div class="settings-block">
+          <h3>Change Password</h3>
+          <input type="password" id="currentPassword" placeholder="Current Password" />
+          <input type="password" id="newPassword" placeholder="New Password" />
+          <input type="password" id="confirmPassword" placeholder="Confirm New Password" />
+          <button onclick="updatePassword()">Update Password</button>
+        </div>
       </section>
 
     <script src="scripts/student.js"></script>

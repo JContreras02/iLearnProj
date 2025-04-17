@@ -109,6 +109,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const lastSection = localStorage.getItem("studentActiveSection") || "dashboardSection";
   showSection(lastSection);
 
+  if (lastSection === "dashboardSection") {
+    loadDashboardMyCourses();
+    loadDashboardNotifications();
+  }
+
   if (lastSection === "courseContentSection") {
     const storedCourseId = localStorage.getItem("currentCourseId");
     const storedCourseTitle = localStorage.getItem("currentCourseTitle");
@@ -583,4 +588,71 @@ function handleCourseProceed(courseId, courseTitle) {
   localStorage.setItem("currentCourseId", courseId);
   localStorage.setItem("currentCourseTitle", courseTitle);
   loadCourseContent(courseId, courseTitle);
+}
+
+function loadDashboardMyCourses() {
+  fetch("/api/courses/student/courses", {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`
+    }
+  })
+    .then(res => res.json())
+    .then(courses => {
+      const container = document.getElementById("dashboardMyCourses");
+      container.innerHTML = "";
+
+      if (!Array.isArray(courses) || courses.length === 0) {
+        container.innerHTML = "<p>No enrolled courses yet.</p>";
+        return;
+      }
+
+      const recent = courses.slice(-2).reverse(); // last 2
+      recent.forEach(course => {
+        const div = document.createElement("div");
+        div.classList.add("mini-course");
+        div.innerHTML = `
+          <img src="${course.banner_url || 'https://via.placeholder.com/100x60?text=Course'}" />
+          <span>${course.title}</span>
+        `;
+        div.addEventListener("click", () => {
+          handleCourseProceed(course.course_id, course.title);
+        });
+        container.appendChild(div);
+      });
+    })
+    .catch(err => {
+      console.error("Failed to load dashboard courses:", err);
+      document.getElementById("dashboardMyCourses").innerHTML = "<p>Error loading courses.</p>";
+    });
+}
+
+
+function loadDashboardNotifications() {
+  fetch("/api/courses/notifications", {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`
+    }
+  })
+    .then(res => res.json())
+    .then(notifs => {
+      const container = document.getElementById("dashboardNotifs");
+      container.innerHTML = "";
+
+      if (!Array.isArray(notifs) || notifs.length === 0) {
+        container.innerHTML = "<p>No notifications.</p>";
+        return;
+      }
+
+      const recent = notifs.slice(0, 2); // 2 most recent
+      recent.forEach(n => {
+        const div = document.createElement("div");
+        div.classList.add("mini-notif");
+        div.textContent = n.message;
+        container.appendChild(div);
+      });
+    })
+    .catch(err => {
+      console.error("Failed to load dashboard notifications:", err);
+      document.getElementById("dashboardNotifs").innerHTML = "<p>Error loading notifications.</p>";
+    });
 }
