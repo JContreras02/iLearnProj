@@ -41,8 +41,8 @@
         </a>
       </li>
       <li class="nav-item">
-        <a href="#" class="nav-link" onclick="showSection('quickToolsSection')">
-          <span class="nav-icon">⚙️</span> Quick Tools
+        <a href="#" class="nav-link" onclick="showSection('settingsSection')">
+          <span class="nav-icon">⚙️</span> Settings
         </a>
       </li>
     </ul>
@@ -67,34 +67,41 @@
         <p id="dateTime"></p>
       </header>
 
-      <section class="dashboard-cards">
-        <div class="dashboard-card">
-          <h3>Course Management</h3>
-          <div id="dashboardCoursesList" class="dashboard-course-list">
-            <p>Loading courses...</p>
+        <section class="dashboard-cards">
+
+          <!-- Course Management Card -->
+          <div class="dashboard-card">
+            <h3>Course Management</h3>
+            <div id="dashboardCoursesList">
+              <p>Loading courses...</p>
+            </div>
+            <button class="take-me-there-btn" onclick="showSection('courseManagementSection')">Take Me There</button>
           </div>
-          <a href="#" onclick="showSection('courseManagementSection')">View All Courses</a>
-        </div>
-        <div class="dashboard-card">
-          <h3>Student Engagement</h3>
-          <p id="totalStudents">Loading students...</p>
-          <p id="recentEnrollment"></p>
-        </div>
-        <div class="dashboard-card">
-          <h3>Notifications</h3>
-          <ul id="notificationsList">
-            <li>No new notifications</li>
-          </ul>
-        </div>
-        <div class="dashboard-card">
-          <h3>Quick Tools</h3>
-          <ul>
-            <li><a href="#" onclick="showSection('courseManagementSection')">Create New Course</a></li>
-            <li><a href="#">Edit Profile</a></li>
-            <li><a href="#">Help Center</a></li>
-          </ul>
-        </div>
-      </section>
+        
+          <!-- Student Engagement Card -->
+          <div class="dashboard-card">
+            <h3>Student Engagement</h3>
+            <p>Total Enrolled Students: <span id="totalStudents">Loading...</span></p>
+            <button class="take-me-there-btn" onclick="showSection('studentEngagementSection')">Take Me There</button>
+          </div>
+        
+          <!-- Notifications Card -->
+          <div class="dashboard-card">
+            <h3>Recent Notifications</h3>
+            <ul id="notificationsList" class="recent-notifications">
+              <li>No new notifications</li>
+            </ul>
+            <button class="take-me-there-btn" onclick="showSection('notificationsSection')">Take Me There</button>
+          </div>
+        
+          <!-- Settings Card -->
+          <div class="dashboard-card">
+            <h3>Settings</h3>
+            <p>Update your preferences and profile.</p>
+            <button class="take-me-there-btn" onclick="showSection('settingsSection')">Take Me There</button>
+          </div>
+        
+        </section>
     </section>
 
     <!-- COURSE MANAGEMENT SECTION -->
@@ -199,7 +206,11 @@
     <section id="studentEngagementSection" style="display: none;">
       <div class="dashboard-header">
         <h2>Student Engagement</h2>
-        <p>Coming soon...</p>
+        <p>See how students are engaging with your courses.</p>
+      </div>
+    
+      <div id="engagementContainer">
+        <!-- Engagement data will be injected here -->
       </div>
     </section>
 
@@ -207,18 +218,34 @@
     <section id="notificationsSection" style="display: none;">
       <div class="dashboard-header">
         <h2>Notifications</h2>
-        <p>Coming soon...</p>
+      </div>
+      <div id="instructorNotificationsContainer">
+        <!-- Notifications will show here -->
       </div>
     </section>
 
-    <!-- QUICK TOOLS -->
-    <section id="quickToolsSection" style="display: none;">
-      <div class="dashboard-header">
-        <h2>Quick Tools</h2>
-        <p>Coming soon...</p>
-      </div>
-    </section>
-  </main>
+    <!-- Settings Section -->
+      <section id="settingsSection" style="display:none;">
+        <h2>Settings</h2>
+        <p>Update your preferences and settings.</p>
+      
+        <!-- Profile Picture -->
+        <div class="settings-block">
+          <h3>Update Profile Picture</h3>
+          <img id="previewProfile" src="/api/placeholder/100/100" alt="Profile Preview" class="profile-img" />
+          <input type="file" id="profileInput" accept="image/*" />
+          <button onclick="uploadProfileImage()">Upload</button>
+        </div>
+      
+        <!-- Password Update -->
+        <div class="settings-block">
+          <h3>Change Password</h3>
+          <input type="password" id="currentPassword" placeholder="Current Password" />
+          <input type="password" id="newPassword" placeholder="New Password" />
+          <input type="password" id="confirmPassword" placeholder="Confirm New Password" />
+          <button onclick="updatePassword()">Update Password</button>
+        </div>
+      </section>
 
   <div id="toast" class="toast"></div>
 

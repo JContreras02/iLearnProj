@@ -55,6 +55,10 @@ router.post('/courses', upload.single('banner'), (req, res) => {
     }
 
     res.status(201).json({ message: 'Course created successfully' });
+    const notification = `Course "${title}" has been created successfully.`;
+    db.query("INSERT INTO notifications (user_id, message) VALUES (?, ?)", [req.userId, notification], (err) => {
+      if (err) console.error("Notification error (course create):", err);
+    });
   });
 });
 
@@ -153,6 +157,13 @@ router.put('/courses/:id/status', (req, res) => {
       console.error("Error updating status:", err);
       return res.status(500).json({ error: "DB error while updating status" });
     }
+      const message = status === "published"
+      ? `Your course has been published.`
+      : `Your course has been saved as draft.`;
+    
+    db.query("INSERT INTO notifications (user_id, message) VALUES (?, ?)", [req.userId, message], (err) => {
+      if (err) console.error("Notification error (status change):", err);
+    });
 
     res.json({ message: "Status updated successfully" });
   });
@@ -195,5 +206,108 @@ router.get('/instructor/dashboard', (req, res) => {
     });
   });
 });
+
+// GET /api/instructor/student-engagement
+router.get('/instructor/student-engagement', (req, res) => {
+  const instructorId = req.userId;
+
+  const sql = `
+    SELECT 
+      c.course_id,
+      c.title,
+      COUNT(e.student_id) AS total_enrolled
+    FROM courses c
+    LEFT JOIN enrollments e ON c.course_id = e.course_id
+    WHERE c.instructor_id = ?
+    GROUP BY c.course_id
+    ORDER BY c.created_at DESC
+  `;
+
+  db.query(sql, [instructorId], (err, results) => {
+    if (err) {
+      console.error("Error loading student engagement:", err);
+      return res.status(500).json({ error: "Failed to fetch engagement data" });
+    }
+
+    res.json(results);
+  });
+});
+
+// GET /api/instructor/course/:courseId/students
+router.get('/instructor/course/:courseId/students', (req, res) => {
+  const { courseId } = req.params;
+
+  const sql = `
+    SELECT u.user_id, u.name, u.email
+    FROM enrollments e
+    JOIN users u ON e.student_id = u.user_id
+    WHERE e.course_id = ?
+  `;
+
+  db.query(sql, [courseId], (err, results) => {
+    if (err) {
+      console.error("Error fetching student names:", err);
+      return res.status(500).json({ error: "Failed to fetch students" });
+    }
+
+    res.json(results);
+  });
+});
+
+// GET /api/instructor/notifications
+router.get('/instructor/notifications', (req, res) => {
+  const instructorId = req.userId;
+
+  const query = `
+    SELECT notification_id, message, is_read, created_at
+    FROM notifications
+    WHERE user_id = ?
+    ORDER BY created_at DESC
+  `;
+
+  db.query(query, [instructorId], (err, results) => {
+    if (err) {
+      console.error("Error fetching instructor notifications:", err);
+      return res.status(500).json({ error: "Failed to load notifications." });
+    }
+
+    res.json(results);
+  });
+});
+
+// PATCH /api/notifications/:id/read
+router.patch('/notifications/:id/read', (req, res) => {
+  const notificationId = req.params.id;
+  const userId = req.userId;
+
+  const sql = `UPDATE notifications SET is_read = 1 WHERE notification_id = ? AND user_id = ?`;
+
+  db.query(sql, [notificationId, userId], (err, result) => {
+    if (err) {
+      console.error("Failed to mark notification as read:", err);
+      return res.status(500).json({ error: "Failed to update notification." });
+    }
+
+    res.status(200).json({ message: "Notification marked as read." });
+  });
+});
+
+// DELETE /api/notifications/:id
+router.delete('/notifications/:id', (req, res) => {
+  const notificationId = req.params.id;
+  const userId = req.userId;
+
+  const sql = `DELETE FROM notifications WHERE notification_id = ? AND user_id = ?`;
+
+  db.query(sql, [notificationId, userId], (err, result) => {
+    if (err) {
+      console.error("Error deleting notification:", err);
+      return res.status(500).json({ error: "Failed to delete notification." });
+    }
+
+    res.status(200).json({ message: "Notification deleted." });
+  });
+});
+
 
 module.exports = router;

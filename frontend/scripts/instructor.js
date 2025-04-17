@@ -19,6 +19,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   loadDashboardData(token);
+  updateTotalEnrolled();
+  loadDashboardNotifications();
   loadMyCourses();
   loadDashboardCourses();
 
@@ -216,6 +218,26 @@ async function loadDashboardData(token) {
   }
 }
 
+// Update total enrolled students
+async function updateTotalEnrolled() {
+  const token = localStorage.getItem("token");
+
+  try {
+    const res = await fetch("/api/instructor/student-engagement", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error("Failed to load engagement");
+
+    const total = data.reduce((sum, course) => sum + course.total_enrolled, 0);
+    document.getElementById("totalEnrolled").textContent = `Total Enrolled Students: ${total}`;
+  } catch (err) {
+    document.getElementById("totalEnrolled").textContent = "Total Enrolled Students: Error";
+    console.error(err);
+  }
+}
+
 // === Load My Courses to Left Side ===
 async function loadMyCourses() {
   const token = localStorage.getItem("token");
@@ -402,6 +424,14 @@ function showSection(sectionId) {
   document.querySelectorAll(".nav-link").forEach(link => link.classList.remove("active"));
   const navLinks = document.querySelectorAll(`.nav-link[onclick*="${sectionId}"]`);
   if (navLinks.length) navLinks[0].classList.add("active");
+
+  if (sectionId === "studentEngagementSection") {
+    loadStudentEngagement();
+  }
+
+  if (sectionId === "notificationsSection") {
+    loadInstructorNotifications();
+  }
 
   localStorage.setItem("activeSection", sectionId);
 }
@@ -673,5 +703,203 @@ async function loadDashboardCourses() {
   } catch (err) {
     console.error("Error loading dashboard courses:", err);
     container.innerHTML = "<p>Error loading courses.</p>";
+  }
+}
+
+async function loadStudentEngagement() {
+  const token = localStorage.getItem("token");
+  const container = document.getElementById("engagementContainer");
+
+  container.innerHTML = "<p>Loading student engagement...</p>";
+
+  try {
+    const res = await fetch("/api/instructor/student-engagement", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) throw new Error("Failed to load engagement");
+
+    if (data.length === 0) {
+      container.innerHTML = "<p>No courses found.</p>";
+      return;
+    }
+
+    container.innerHTML = "";
+
+    data.forEach(course => {
+      const card = document.createElement("div");
+      card.className = "dashboard-card";
+      card.innerHTML = `
+        <h3>${course.title}</h3>
+        <p>Total Enrolled: <strong>${course.total_enrolled}</strong></p>
+        <button onclick="showStudentList(${course.course_id}, '${course.title}')" class="signout-btn">View Students</button>
+        <div id="students-${course.course_id}" style="display:none; margin-top: 1rem;"></div>
+      `;
+      container.appendChild(card);
+    });
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = "<p>Error loading student engagement data.</p>";
+  }
+}
+
+async function showStudentList(courseId, title) {
+  const token = localStorage.getItem("token");
+  const container = document.getElementById(`students-${courseId}`);
+
+  if (container.style.display === "block") {
+    container.style.display = "none";
+    container.innerHTML = "";
+    return;
+  }
+
+  container.innerHTML = "<p>Loading students...</p>";
+  container.style.display = "block";
+
+  try {
+    const res = await fetch(`/api/instructor/course/${courseId}/students`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const students = await res.json();
+
+    if (!res.ok) throw new Error("Failed to fetch students");
+
+    if (students.length === 0) {
+      container.innerHTML = "<p>No enrolled students.</p>";
+      return;
+    }
+
+    const list = document.createElement("ul");
+    students.forEach(s => {
+      const li = document.createElement("li");
+      li.textContent = `${s.name} (${s.email})`;
+      list.appendChild(li);
+    });
+
+    container.innerHTML = `<strong>Enrolled Students for ${title}:</strong>`;
+    container.appendChild(list);
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = "<p>Failed to load students.</p>";
+  }
+}
+
+async function loadInstructorNotifications() {
+  const token = localStorage.getItem("token");
+  const container = document.getElementById("instructorNotificationsContainer");
+
+  try {
+    const res = await fetch("/api/instructor/notifications", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const notifications = await res.json();
+    if (!res.ok) throw new Error("Error loading notifications");
+
+    container.innerHTML = "";
+
+    if (notifications.length === 0) {
+      container.innerHTML = "<p>No notifications.</p>";
+      return;
+    }
+
+    notifications.forEach(n => {
+      const notif = document.createElement("div");
+      notif.className = `notification-card ${n.is_read ? 'read' : ''}`;
+      notif.dataset.id = n.notification_id;
+    
+      notif.innerHTML = `
+        <div class="notif-content">
+          <p>${n.message}</p>
+          <small>${new Date(n.created_at).toLocaleString()}</small>
+        </div>
+        <button class="delete-notification-btn" data-id="${n.notification_id}">×</button>
+      `;
+    
+      // Handle marking as read
+      notif.querySelector(".notif-content").addEventListener("click", () => {
+        markInstructorNotificationRead(n.notification_id, notif);
+      });
+    
+      // Handle delete
+      notif.querySelector(".delete-notification-btn").addEventListener("click", (e) => {
+        e.stopPropagation(); // Prevents mark-as-read when deleting
+        deleteInstructorNotification(n.notification_id);
+      });
+    
+      container.appendChild(notif);
+    });
+
+  } catch (err) {
+    console.error("Notification load error:", err);
+    container.innerHTML = "<p>Failed to load notifications.</p>";
+  }
+}
+
+async function deleteInstructorNotification(id) {
+  const token = localStorage.getItem("token");
+  try {
+    const res = await fetch(`/api/notifications/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (res.ok) {
+      loadInstructorNotifications(); // Reload
+    } else {
+      showToast("Failed to delete notification", false);
+    }
+  } catch (err) {
+    console.error("Delete error:", err);
+    showToast("Server error", false);
+  }
+}
+
+async function markInstructorNotificationRead(id, notifElement) {
+  const token = localStorage.getItem("token");
+  try {
+    const res = await fetch(`/api/notifications/${id}/read`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (res.ok) {
+      notifElement.classList.add("read");
+    }
+  } catch (err) {
+    console.error("Mark read error:", err);
+  }
+}
+
+async function loadDashboardNotifications() {
+  const token = localStorage.getItem("token");
+  const list = document.getElementById("notificationsList");
+
+  try {
+    const res = await fetch("/api/instructor/notifications", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error("Failed to load notifications");
+
+    list.innerHTML = "";
+
+    const recent = data.slice(0, 2); // get top 2 notifications
+    if (recent.length === 0) {
+      list.innerHTML = "<li>No notifications</li>";
+    } else {
+      recent.forEach(n => {
+        const li = document.createElement("li");
+        li.textContent = n.message;
+        list.appendChild(li);
+      });
+    }
+  } catch (err) {
+    list.innerHTML = "<li>Error loading notifications</li>";
+    console.error(err);
   }
 }

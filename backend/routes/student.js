@@ -96,19 +96,32 @@ router.delete("/enroll/:courseId", (req, res) => {
         return res.status(404).json({ message: "You are not enrolled in this course." });
       }
 
-      const courseQuery = "SELECT title FROM courses WHERE course_id = ?";
+      const courseQuery = "SELECT title, instructor_id FROM courses WHERE course_id = ?";
       db.query(courseQuery, [courseId], (err, courseResult) => {
         if (err || courseResult.length === 0) {
-          return res.status(200).json({ message: "Successfully unenrolled." }); // fallback
+          return res.status(200).json({ message: "Successfully unenrolled." });
         }
       
         const courseTitle = courseResult[0].title;
-        const noteQuery = "INSERT INTO notifications (user_id, message) VALUES (?, ?)";
-        const noteMessage = `You have unenrolled from course: ${courseTitle}`;
+        const instructorId = courseResult[0].instructor_id;
       
-        db.query(noteQuery, [studentId, noteMessage], (err) => {
-          if (err) console.error("Notification insert failed (unenroll):", err);
-          return res.status(200).json({ message: "Successfully unenrolled." });
+        const studentQuery = "SELECT name FROM users WHERE user_id = ?";
+        db.query(studentQuery, [studentId], (err, studentResult) => {
+          const studentName = studentResult[0]?.name || "A student";
+      
+          const notifications = `
+            INSERT INTO notifications (user_id, message) VALUES 
+            (?, ?), 
+            (?, ?)
+          `;
+      
+          const studentMsg = `You have unenrolled from course: ${courseTitle}`;
+          const instructorMsg = `${studentName} has unenrolled from your course: ${courseTitle}`;
+      
+          db.query(notifications, [studentId, studentMsg, instructorId, instructorMsg], (err) => {
+            if (err) console.error("Unenroll notification error:", err);
+            return res.status(200).json({ message: "Successfully unenrolled." });
+          });
         });
       });
     });
